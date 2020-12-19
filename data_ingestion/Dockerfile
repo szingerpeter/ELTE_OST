@@ -16,7 +16,7 @@ RUN add-apt-repository -y ppa:openjdk-r/ppa \
 ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
-RUN wget https://downloads.lightbend.com/scala/2.12.2/scala-2.12.2.tgz -O /tmp/scala.tgz \
+RUN wget -q https://downloads.lightbend.com/scala/2.12.2/scala-2.12.2.tgz -O /tmp/scala.tgz \
     && tar -xvf /tmp/scala.tgz -C /opt/ \
     && ln -s /opt/scala-2.12.2 /usr/local/scala
 
@@ -28,34 +28,33 @@ RUN echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.lis
     && apt-get -y update \
     && apt-get -y install sbt
 
-RUN wget https://downloads.apache.org/spark/spark-3.0.1/spark-3.0.1-bin-hadoop3.2.tgz -O /tmp/spark.tgz \
+RUN wget -q https://downloads.apache.org/spark/spark-3.0.1/spark-3.0.1-bin-hadoop3.2.tgz -O /tmp/spark.tgz \
         && tar -xvf /tmp/spark.tgz -C /opt/ \
         && ln -s /opt/spark-3.0.1-bin-hadoop3.2/ /usr/local/spark 
 
 ENV SPARK_HOME="/usr/local/spark"
 ENV PATH="${SPARK_HOME}/bin:${PATH}"
 
-RUN wget https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz -O /tmp/kafka.tgz \
+RUN wget -q https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz -O /tmp/kafka.tgz \
     && tar -xvf /tmp/kafka.tgz -C /opt/ \
     && ln -s /opt/kafka_2.13-2.6.0/ /usr/local/kafka
 
 ENV KAFKA_HOME="/usr/local/kafka"
 ENV PATH="${KAFKA_HOME}/bin:${PATH}"
 
-RUN mkdir -p /opt/app \
-    && mkdir /opt/app/mounted_data
-
-VOLUME /opt/app/mounted_data
-
+RUN mkdir -p /opt/app 
 WORKDIR /opt/app
 
-COPY . .
+RUN mkdir /opt/app/mounted_data
+VOLUME /opt/app/mounted_data
+
+COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
 
-RUN chmod +x docker-entrypoint.sh
+COPY . .
 
-VOLUME /opt/app/mounted_data/
+RUN chmod +x docker-entrypoint.sh
 
 CMD ["bash", "docker-entrypoint.sh"]
 #sudo docker run --mount src=$(pwd)/data/,target=/opt/app/mounted_data/,type=bind,readonly -p 4040:4040 -it --name test test bash

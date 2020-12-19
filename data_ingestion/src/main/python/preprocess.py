@@ -1,7 +1,7 @@
 import h5py
 import os
 import pandas as pd
-
+import argparse
 
 def extract_from_h5(h5):
     """Extract data from h5 file split per timestamp per location
@@ -51,7 +51,7 @@ def process_file(path):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--files", dest = "files", type = str, nargs = "+", help = "files to be processed")
-    parser.add_argument("--folder", dest = "folder", type = str, nargs = "1", help = "folder to be processed")
+    parser.add_argument("--folder", dest = "folder", type = str, nargs = 1, help = "folder to be processed")
     args = parser.parse_args()
     if args.files is not None and len(args.files) > 0:
         for file in args.files:
@@ -60,6 +60,7 @@ if __name__ == "__main__":
         for fn in os.listdir(args.folder):
             process_file(args.folder + fn)
     else:
-        for dir in ["data/2018_electric_power_data/adapt/", "data/2018_electric_power_data/train/Xm1"]:
-            for fn in os.lisdir(dir):
-                process_file(dir + fn)
+        for dir in ["data/2018_electric_power_data/adapt/", "data/2018_electric_power_data/train/Xm1/"]:
+            for fn in os.listdir(dir):
+                if "h5" in fn:
+                    process_file(dir + fn)
