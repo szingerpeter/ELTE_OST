@@ -8,14 +8,12 @@ import org.apache.spark.sql.functions._
 
 val schema = new StructType().add("timestamp", DoubleType).add("location_id", IntegerType).add("measurement", DoubleType)
 
-val file = spark.readStream.schema(schema).format("csv").load("/opt/app/data/2011
-8_electric_power_data/adapt/")//.withColumn("value", concat(col("timestamp"), lit((
-" "), col("location_id"), lit(" "), col("measurement")))
+val file = spark.readStream.schema(schema).format("csv").load("/opt/app/data/2018_electric_power_data/adapt/")//.withColumn("value", concat(col("timestamp"), lit((" "), col("location_id"), lit(" "), col("measurement")))
 
 val out = file.withColumn("value", to_json(struct(file.columns.map(col(_)): _*)))
 
 
-out.
+out
   .writeStream
   .format("kafka")
   .option("checkpointLocation", "/tmp/")
