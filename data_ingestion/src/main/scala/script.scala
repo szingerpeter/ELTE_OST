@@ -17,7 +17,7 @@ out
   .writeStream
   .format("kafka")
   .option("checkpointLocation", "/tmp/")
-  .option("kafka.bootstrap.servers", "localhost:9092")
+  .option("kafka.bootstrap.servers", "kafka:9093")
   .option("topic", "test")
   .start()
   .awaitTermination(10000)
