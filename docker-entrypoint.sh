@@ -7,8 +7,10 @@ mv data/2018\ Electric\ power\ data data/2018_electric_power_data
 # preprocess python script
 echo "running preprocessing script"
 python src/main/python/preprocess.py
-# sbt
-echo "packaging scala source code"
-sbt package
+
+# package all scala projects
+/bin/bash forecasting/package.sh
+/bin/bash data_ingestion/package.sh
+
 echo "keep container running"
 /bin/bash

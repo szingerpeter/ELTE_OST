@@ -28,6 +28,13 @@ RUN echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.lis
     && apt-get -y update \
     && apt-get -y install sbt
 
+RUN wget -q https://ftp.cixug.es/apache/flink/flink-1.12.0/flink-1.12.0-bin-scala_2.12.tgz -O /tmp/flink.tgz \
+    && tar -xvf /tmp/flink.tgz -C /opt/ \
+    && ln -s /opt/flink-1.12.0/ /usr/local/flink
+
+ENV FLINK_HOME="/usr/local/flink"
+ENV PATH="${FLINK_HOME}/bin:${PATH}"
+
 RUN wget -q https://downloads.apache.org/spark/spark-3.0.1/spark-3.0.1-bin-hadoop3.2.tgz -O /tmp/spark.tgz \
         && tar -xvf /tmp/spark.tgz -C /opt/ \
         && ln -s /opt/spark-3.0.1-bin-hadoop3.2/ /usr/local/spark 
