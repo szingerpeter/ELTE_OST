@@ -19,5 +19,4 @@ On your host machine in this directory, you need to have a /data/ folder with th
 
 ## TODO
 - packaging the scala project and submitting via spark-submit did not work (fix it)
-- make different services for zookeeper, kafka and data ingestion
 - right now, the 'preprocessing.py' script only saves a couple of measurements in the csv file for testing purposes (do not forget to change it back) and streaming happens from the testing directory ('\*/adapt/')
