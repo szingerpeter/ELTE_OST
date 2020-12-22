@@ -35,13 +35,6 @@ RUN wget -q https://downloads.apache.org/spark/spark-3.0.1/spark-3.0.1-bin-hadoo
 ENV SPARK_HOME="/usr/local/spark"
 ENV PATH="${SPARK_HOME}/bin:${PATH}"
 
-RUN wget -q https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz -O /tmp/kafka.tgz \
-    && tar -xvf /tmp/kafka.tgz -C /opt/ \
-    && ln -s /opt/kafka_2.13-2.6.0/ /usr/local/kafka
-
-ENV KAFKA_HOME="/usr/local/kafka"
-ENV PATH="${KAFKA_HOME}/bin:${PATH}"
-
 RUN mkdir -p /opt/app 
 WORKDIR /opt/app
 
