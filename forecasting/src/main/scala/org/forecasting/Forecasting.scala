@@ -18,63 +18,65 @@ package org.forecasting
  * limitations under the License.
  */
 
-import org.apache.flink.api.scala._
+import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
+import org.apache.flink.streaming.api.scala._
+import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer, FlinkKafkaProducer}
+import org.apache.flink.streaming.util.serialization.{DeserializationSchema, SerializationSchema}
 
-/**
- * Skeleton for a Flink Job.
- *
- * For a full example of a Flink Job, see the WordCountJob.scala file in the
- * same package/directory or have a look at the website.
- *
- * You can also generate a .jar file that you can submit on your Flink
- * cluster. Just type
- * {{{
- *   sbt clean assembly
- * }}}
- * in the projects root directory. You will find the jar in
- * target/scala-2.11/Flink\ Project-assembly-0.1-SNAPSHOT.jar
- *
- */
+import java.util.Properties
+import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+
 object Forecasting {
   def main(args: Array[String]) {
-    /**
-     * Here, you can start creating your execution plan for Flink.
-     *
-     * Start with getting some data from the environment, like
-     * env.readTextFile(textPath);
-     *
-     * then, transform the resulting DataSet[String] using operations
-     * like:
-     *   .filter()
-     *   .flatMap()
-     *   .join()
-     *   .group()
-     *
-     * and many more.
-     * Have a look at the programming guide:
-     *
-     * http://flink.apache.org/docs/latest/programming_guide.html
-     *
-     * and the examples
-     *
-     * http://flink.apache.org/docs/latest/examples.html
-     *
-     */
-
     // set up the execution environment
-    val env = ExecutionEnvironment.getExecutionEnvironment
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
+
+    val kafkaConsumerProperties = Map(
+      "zookeeper.connect" -> "localhost:2181",
+      "group.id" -> "flink",
+      "bootstrap.servers" -> "localhost:9092"
+    )
+
+    val properties = new Properties()
+    properties.setProperty("bootstrap.servers", "localhost:9092")
+    properties.setProperty("group.id", "flink")
+    properties.setProperty("zookeeper.connect", "localhost:2181")
+
+
+    val kafkaConsumer = new FlinkKafkaConsumer[String](
+      "test",
+      KafkaStringSchema,
+      properties
+    )
+/*
+    val kafkaProducer = new FlinkKafkaProducer[String](
+      "localhost:9092",
+      "output",
+      KafkaStringSchema
+    )
+*/
 
     // get input data
-    val text = env.fromElements("To be, or not to be,--that is the question:--",
-      "Whether 'tis nobler in the mind to suffer", "The slings and arrows of outrageous fortune",
-      "Or to take arms against a sea of troubles,")
-
-    val counts = text.flatMap { _.toLowerCase.split("\\W+") }
-      .map { (_, 1) }
-      .groupBy(0)
-      .sum(1)
-
+    val lines = env.addSource(kafkaConsumer)
+    
     // execute and print result
-    counts.print()
+    lines.print()
+
+    env.execute()
+
+  }
+
+  object KafkaStringSchema extends SerializationSchema[String] with DeserializationSchema[String] {
+
+    import org.apache.flink.api.common.typeinfo.TypeInformation
+    import org.apache.flink.api.java.typeutils.TypeExtractor
+
+    override def serialize(t: String): Array[Byte] = t.getBytes("UTF-8")
+
+    override def isEndOfStream(t: String): Boolean = false
+
+    override def deserialize(bytes: Array[Byte]): String = new String(bytes, "UTF-8")
+
+    override def getProducedType: TypeInformation[String] = TypeExtractor.getForClass(classOf[String])
   }
 }
