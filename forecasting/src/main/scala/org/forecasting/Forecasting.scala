@@ -23,36 +23,43 @@ import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer, FlinkKafkaProducer}
 import org.apache.flink.streaming.util.serialization.{DeserializationSchema, SerializationSchema}
 
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode
+
 import java.util.Properties
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 
 object Forecasting {
+
+  val KAFKA_TOPIC_NAME = "test"
+  val ZOOKEEPER_CONNECTION = "zookeeper:2181"
+  val KAFKA_BOOTSTRAP_SERVER = "kafka:9093"
+
   def main(args: Array[String]) {
     // set up the execution environment
     val env = StreamExecutionEnvironment.getExecutionEnvironment
 
     val kafkaConsumerProperties = Map(
-      "zookeeper.connect" -> "zookeeper:2181",
+      "zookeeper.connect" -> ZOOKEEPER_CONNECTION,
       "group.id" -> "flink",
-      "bootstrap.servers" -> "kafka:9093"
+      "bootstrap.servers" -> KAFKA_BOOTSTRAP_SERVER
     )
 
     val properties = new Properties()
-    properties.setProperty("bootstrap.servers", "kafka:9093")
+    properties.setProperty("bootstrap.servers", KAFKA_BOOTSTRAP_SERVER)
     properties.setProperty("group.id", "flink")
-    properties.setProperty("zookeeper.connect", "zookeeper:2181")
+    properties.setProperty("zookeeper.connect", ZOOKEEPER_CONNECTION)
 
 
-    val kafkaConsumer = new FlinkKafkaConsumer[String](
-      "test",
-      KafkaStringSchema,
+    val kafkaConsumer = new FlinkKafkaConsumer[ObjectNode](
+      KAFKA_TOPIC_NAME,
+      KafkaJsonSchema,
       properties
     )
 /*
     val kafkaProducer = new FlinkKafkaProducer[String](
       "localhost:9092",
       "output",
-      KafkaStringSchema
+      KafkaJsonSchema
     )
 */
 
@@ -62,23 +69,29 @@ object Forecasting {
     // execute and print result
     lines.print()
 
-    lines.writeAsText("output.txt").setParallelism(1);
+    lines.writeAsText("output.txt", org.apache.flink.core.fs.FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
     env.execute()
 
   }
 
-  object KafkaStringSchema extends SerializationSchema[String] with DeserializationSchema[String] {
+  object KafkaJsonSchema extends SerializationSchema[ObjectNode] with DeserializationSchema[ObjectNode] {
 
     import org.apache.flink.api.common.typeinfo.TypeInformation
     import org.apache.flink.api.java.typeutils.TypeExtractor
+    import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper
 
-    override def serialize(t: String): Array[Byte] = t.getBytes("UTF-8")
+    override def serialize(t: ObjectNode): Array[Byte] = t.toString().getBytes("UTF-8")
 
-    override def isEndOfStream(t: String): Boolean = false
+    override def isEndOfStream(t: ObjectNode): Boolean = false
 
-    override def deserialize(bytes: Array[Byte]): String = new String(bytes, "UTF-8")
-
-    override def getProducedType: TypeInformation[String] = TypeExtractor.getForClass(classOf[String])
+    override def deserialize(bytes: Array[Byte]): ObjectNode = {
+      try {
+        new ObjectMapper().readValue(new String(bytes, "UTF-8"), classOf[ObjectNode])
+      } catch {
+        case e:Exception => new ObjectMapper().readValue("{}", classOf[ObjectNode])
+      }
+    }
+    override def getProducedType: TypeInformation[ObjectNode] = TypeExtractor.getForClass(classOf[ObjectNode])
   }
 }
