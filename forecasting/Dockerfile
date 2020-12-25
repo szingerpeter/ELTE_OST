@@ -35,6 +35,14 @@ RUN wget -q https://ftp.cixug.es/apache/flink/flink-1.12.0/flink-1.12.0-bin-scal
 ENV FLINK_HOME="/usr/local/flink"
 ENV PATH="${FLINK_HOME}/bin:${PATH}"
 
+
+RUN wget -q https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz -O /tmp/kafka.tgz \
+    && tar -xvf /tmp/kafka.tgz -C /opt/ \
+    && ln -s /opt/kafka_2.13-2.6.0/ /usr/local/kafka
+
+ENV KAFKA_HOME="/usr/local/kafka"
+ENV PATH="${KAFKA_HOME}/bin:${PATH}"
+
 COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt

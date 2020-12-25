@@ -32,15 +32,15 @@ object Forecasting {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
 
     val kafkaConsumerProperties = Map(
-      "zookeeper.connect" -> "localhost:2181",
+      "zookeeper.connect" -> "zookeeper:2181",
       "group.id" -> "flink",
-      "bootstrap.servers" -> "localhost:9092"
+      "bootstrap.servers" -> "kafka:9093"
     )
 
     val properties = new Properties()
-    properties.setProperty("bootstrap.servers", "localhost:9092")
+    properties.setProperty("bootstrap.servers", "kafka:9093")
     properties.setProperty("group.id", "flink")
-    properties.setProperty("zookeeper.connect", "localhost:2181")
+    properties.setProperty("zookeeper.connect", "zookeeper:2181")
 
 
     val kafkaConsumer = new FlinkKafkaConsumer[String](
@@ -61,6 +61,8 @@ object Forecasting {
     
     // execute and print result
     lines.print()
+
+    lines.writeAsText("output.txt").setParallelism(1);
 
     env.execute()
 
