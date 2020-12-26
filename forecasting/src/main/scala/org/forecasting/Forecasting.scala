@@ -29,6 +29,8 @@ import java.util.Properties
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 
 object Forecasting {
+  
+  val server = Server
 
   val KAFKA_TOPIC_NAME = "test"
   val ZOOKEEPER_CONNECTION = "zookeeper:2181"
@@ -74,6 +76,8 @@ object Forecasting {
 
     lines.writeAsText("output.txt", org.apache.flink.core.fs.FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
+    lines.writeToSocket("localhost", 8080, KafkaJsonSchema)
+    
     env.execute()
 
   }
