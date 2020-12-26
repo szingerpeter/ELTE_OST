@@ -65,6 +65,9 @@ object Forecasting {
 
     // get input data
     val lines = env.addSource(kafkaConsumer)
+                    .filter(!_.toString().equals("{}")) // filter incorrect values
+                    .filter(_.get("measurement") != null)
+                    .filter(_.get("measurement").asInt != 0)
     
     // execute and print result
     lines.print()
