@@ -34,3 +34,11 @@ services:
       - kafka
     volumes:
       - "./data_ingestion/data:/opt/app/mounted_data/"
+  cassandra:
+    build:
+      context: ./cassandra
+      dockerfile: Dockerfile
+    expose:
+      - "9042"
+    environment:
+      CASSANDRA_KEYSPACE: test
