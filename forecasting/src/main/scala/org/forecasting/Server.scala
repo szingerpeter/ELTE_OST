@@ -18,7 +18,7 @@ class TCPConnectionManager(address: String, port: Int) extends Actor {
       println(s"Server started on $local")
     case Connected(remote, local) =>
       val handler = context.actorOf(Props[TCPConnectionHandler])
-      println(s"New connnection: $local -> $remote")
+      println(s"New connection: $local -> $remote")
       sender() ! Register(handler)
   }
 }
@@ -27,7 +27,8 @@ class TCPConnectionHandler extends Actor {
   override def receive: Actor.Receive = {
     case Received(data) =>
       val decoded = data.utf8String
-      sender() ! Write(ByteString(s"You told us: $decoded"))
+      println(s"New data: $decoded")
+      sender() ! Write(ByteString(decoded))
     case message: ConnectionClosed =>
       println("Connection has been closed")
       context stop self

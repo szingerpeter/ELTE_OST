@@ -22,6 +22,7 @@ import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer, FlinkKafkaProducer}
 import org.apache.flink.streaming.util.serialization.{DeserializationSchema, SerializationSchema}
+import org.apache.flink.api.common.serialization.SimpleStringSchema
 
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode
 
@@ -30,7 +31,7 @@ import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironm
 
 object Forecasting {
   
-  val server = Server
+  //val server = Server
 
   val KAFKA_TOPIC_NAME = "test"
   val ZOOKEEPER_CONNECTION = "zookeeper:2181"
@@ -57,13 +58,6 @@ object Forecasting {
       KafkaJsonSchema,
       properties
     )
-/*
-    val kafkaProducer = new FlinkKafkaProducer[String](
-      "localhost:9092",
-      "output",
-      KafkaJsonSchema
-    )
-*/
 
     // get input data
     val lines = env.addSource(kafkaConsumer)
@@ -74,9 +68,9 @@ object Forecasting {
     // execute and print result
     lines.print()
 
-    lines.writeAsText("output.txt", org.apache.flink.core.fs.FileSystem.WriteMode.OVERWRITE).setParallelism(1);
+    //lines.writeAsText("output.txt", org.apache.flink.core.fs.FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
-    lines.writeToSocket("localhost", 8080, KafkaJsonSchema)
+    lines.map(x => x.toString).writeToSocket("localhost", 8080, new SimpleStringSchema())
     
     env.execute()
 
