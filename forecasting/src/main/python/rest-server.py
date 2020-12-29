@@ -5,6 +5,7 @@ from flask import request
 from flask_cors import CORS, cross_origin
 
 import threading, time
+from models import get_model,predict,data_conversion_for_predict
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'the quick brown fox jumps over the lazy dog'
@@ -20,9 +21,9 @@ def forecast():
 
     measurement = 0
 
-    # CALL TS MODULE HERE FOR PREDICTION
+    
     data = "{\"timestamp\": %s,\"location_id\": %s,\"measurement\": %f}" % (timestamp, location_id, measurement)
-
+    print(predict(get_model(),data_conversion_for_predict(data)))
     print(data)
     return Response(
         response=data,
