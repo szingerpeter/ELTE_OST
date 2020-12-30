@@ -12,5 +12,7 @@ echo "packaging scala source code"
 if ! [[ -d "target" ]]; then
   sbt package
 fi
-#echo "keep container running"
-#/bin/bash
+
+echo "waiting for kafka service"
+./wait-for-it.sh kafka:9093 --timeout=100 -- echo "kafka is up"
+

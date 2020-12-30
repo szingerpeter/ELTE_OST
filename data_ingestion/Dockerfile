@@ -47,6 +47,7 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-RUN chmod +x docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh\
+    && chmod +x wait-for-it.sh
 
-CMD ["bash", "docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
