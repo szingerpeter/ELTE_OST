@@ -1,13 +1,16 @@
 import socket
 import threading
 
-from models import get_model,data_conversion_for_train,retrain_model
+from model import ForecastingModel
+
 connections = []
 total_connections = 0
 
 HOST_NAME = "localhost"
 PORT = 8080
-# modificato
+
+forecastingModel = ForecastingModel()
+
 class Client(threading.Thread):
     def __init__(self, socket, address, id, signal):
         threading.Thread.__init__(self)
@@ -31,7 +34,7 @@ class Client(threading.Thread):
             if data != "":
                 print("Client " + str(self.id) + ": " + str(data.decode("utf-8")))
                 
-                retrain_model(get_model(),data_conversion_for_train(str(data.decode("utf-8"))))
+                #forecastingModel.retrain(str(data.decode("utf-8")))
 
                 for client in connections:
                     if client.id != self.id:

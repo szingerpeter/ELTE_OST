@@ -5,13 +5,15 @@ from flask import request
 from flask_cors import CORS, cross_origin
 
 import threading, time
-from models import get_model,predict,data_conversion_for_predict
+from model import ForecastingModel
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'the quick brown fox jumps over the lazy dog'
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 cors = CORS(app, resources={r"/forecast": {"origins": "http://localhost:5000"}})
+
+forecastingModel = ForecastingModel()
 
 @app.route('/forecast')
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
@@ -21,10 +23,9 @@ def forecast():
 
     measurement = 0
 
-    
-    data = "{\"timestamp\": %s,\"location_id\": %s,\"measurement\": %f}" % (timestamp, location_id, measurement)
-    print(predict(get_model(),data_conversion_for_predict(data)))
-    print(data)
+    data = [float(timestamp),float(location_id)]
+    data = "{\"timestamp\": %s,\"location_id\": %s,\"measurement\": %f}" % (timestamp, location_id, 
+                                                                            forecastingModel.predict(data))
     return Response(
         response=data,
         status=200,
