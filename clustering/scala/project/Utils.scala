@@ -5,6 +5,7 @@ import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.api.common.serialization.{DeserializationSchema, SerializationSchema}
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode
 import net.liftweb.json.Serialization.write
+import moa.clusterers.denstream.{MicroCluster, Timestamp}
 
 class OutKafkaJsonSchema extends SerializationSchema[List[List[Measurement]]] {
     
@@ -48,12 +49,28 @@ class ListAggregateFunction[T] extends AggregateFunction[T, List[T], List[T]] {
     
 }
 
-
 class Measurement(var timestamp: Long = 0, var location_id: Long = 0, var measurement: Double = 0.0) {
     
     var _timestamp: Long = timestamp;
     var _location_id: Long = location_id;
     var _measurement: Double = measurement;
     
+}
+
+class ClusteringFeature(center: Array[Double], dimensions: Int, creationTimestamp: Long, lambda: Double, currentTimestamp: Timestamp)
+  extends MicroCluster(center, dimensions, creationTimestamp, lambda, currentTimestamp) {
+    
+    // Add additional functionality if needed
+    
+}
+
+class ClusteringResult(
+                        var location_id: Long = 0,
+                        var cluster_label: Long = 0,
+                        var measurements: List[Measurement],
+                        var cluster_info: List[ClusteringFeature]
+                      ) {
+    
+    override def toString: String = { s"${location_id}: ${cluster_label}" }
 }
 
