@@ -33,4 +33,4 @@ services:
     depends_on:
       - kafka
     volumes:
-      - "./data_ingestion/data:/opt/app/mounted_data/"
+      - "./data_ingestion/data:/opt/app/mounted_data/:ro"
