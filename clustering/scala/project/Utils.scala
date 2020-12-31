@@ -68,7 +68,7 @@ class ClusteringResult(
                         var location_id: Long = 0,
                         var cluster_label: Long = 0,
                         var measurements: List[Measurement],
-                        var cluster_info: List[ClusteringFeature]
+                        var cluster_info: ClusteringFeature
                       ) {
     
     override def toString: String = { s"${location_id}: ${cluster_label}" }
