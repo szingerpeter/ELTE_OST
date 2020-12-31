@@ -33,10 +33,4 @@ services:
     depends_on:
       - kafka
     volumes:
-      - "./data_ingestion/data:/opt/app/mounted_data/"
-    command: tail -F /dev/null
-  forecasting:
-    build:
-      context: ./forecasting
-      dockerfile: Dockerfile
-    command: tail -F /dev/null
+      - "./data_ingestion/data:/opt/app/mounted_data/:ro"
