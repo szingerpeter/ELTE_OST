@@ -34,3 +34,9 @@ services:
       - kafka
     volumes:
       - "./data_ingestion/data:/opt/app/mounted_data/:ro"
+    command: tail -F /dev/null
+  forecasting:
+    build:
+      context: ./forecasting
+      dockerfile: Dockerfile
+    command: tail -F /dev/null
