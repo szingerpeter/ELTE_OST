@@ -1,6 +1,6 @@
 # sbt
 echo "packaging scala source code"
-sbt package -Dsbt.rootdir=true
+sbt package
 echo "running scala program"
-sbt run -Dsbt.rootdir=true
+sbt run
 echo "exiting docker-entrypoint.sh"

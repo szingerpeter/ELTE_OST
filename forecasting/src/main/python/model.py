@@ -11,7 +11,7 @@ import numpy as np
 class ForecastingModel():
 
   def __init__(self):
-    self.weights_filename = "weights.h5"
+    self.weights_filename = "resources/weights.h5"
     self.model = Sequential()
     self.model.add(LSTM(50, return_sequences=False,activation='relu', input_shape=(2,1)))
     self.model.add(Dense(1))

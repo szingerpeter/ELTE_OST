@@ -30,8 +30,6 @@ import java.util.Properties
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 
 object Forecasting {
-  
-  //val server = Server
 
   val KAFKA_TOPIC_NAME = "test"
   val ZOOKEEPER_CONNECTION = "zookeeper:2181"
@@ -40,12 +38,6 @@ object Forecasting {
   def main(args: Array[String]) {
     // set up the execution environment
     val env = StreamExecutionEnvironment.getExecutionEnvironment
-
-    val kafkaConsumerProperties = Map(
-      "zookeeper.connect" -> ZOOKEEPER_CONNECTION,
-      "group.id" -> "flink",
-      "bootstrap.servers" -> KAFKA_BOOTSTRAP_SERVER
-    )
 
     val properties = new Properties()
     properties.setProperty("bootstrap.servers", KAFKA_BOOTSTRAP_SERVER)

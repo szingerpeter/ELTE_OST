@@ -43,6 +43,9 @@ RUN wget -q https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz -O /tm
 ENV KAFKA_HOME="/usr/local/kafka"
 ENV PATH="${KAFKA_HOME}/bin:${PATH}"
 
+RUN mkdir -p /opt/app 
+WORKDIR /opt/app
+
 COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt

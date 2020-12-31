@@ -5,10 +5,11 @@ from flask import request
 from flask_cors import CORS, cross_origin
 
 import threading, time
+import os
 from model import ForecastingModel
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'the quick brown fox jumps over the lazy dog'
+app.config['SECRET_KEY'] = os.urandom(12)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 cors = CORS(app, resources={r"/forecast": {"origins": "http://localhost:5000"}})
