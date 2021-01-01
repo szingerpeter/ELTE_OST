@@ -9,7 +9,7 @@ import org.apache.spark.sql.functions._
 
 object App {
     def main(args: Array[String]) {
-        val spark = SparkSession.builder.appName("Data ingestion").getOrCreate()
+        val spark = SparkSession.builder.appName("Data ingestion").config("spark.master", "local").getOrCreate()
 
         val schema = new StructType().add("timestamp", DoubleType).add("location_id", IntegerType).add("measurement", DoubleType)
 
