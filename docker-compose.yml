@@ -44,3 +44,14 @@ services:
       - "9042"
     environment:
       CASSANDRA_KEYSPACE: test
+  save_measurements:
+    build:
+      context: ./save_measurements
+      dockerfile: Dockerfile
+    ports:
+      - "4041:4040"
+    depends_on:
+      - kafka
+      - cassandra
+      - data_ingestion
+
