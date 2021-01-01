@@ -2,12 +2,14 @@ version: "3"
 services:
   zookeeper:
     image: zookeeper:latest
+    restart: "on-failure:3"
     environment:
       ZOOKEEPER_CLIENT_PORT: "2181"
     ports:
       - "2181:2181"
   kafka:
     image: wurstmeister/kafka:latest
+    restart: "on-failure:3"
     depends_on:
       - zookeeper
     ports:
@@ -30,6 +32,7 @@ services:
     build:
       context: ./data_ingestion
       dockerfile: Dockerfile
+    restart: "on-failure:3"
     depends_on:
       - kafka
     ports:
@@ -40,6 +43,7 @@ services:
     build:
       context: ./cassandra
       dockerfile: Dockerfile
+    restart: "on-failure:3"
     expose:
       - "9042"
     environment:
@@ -48,6 +52,7 @@ services:
     build:
       context: ./save_measurements
       dockerfile: Dockerfile
+    restart: "on-failure:3"
     ports:
       - "4041:4040"
     depends_on:

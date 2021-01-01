@@ -14,8 +14,8 @@ import java.sql.Timestamp
 
 object App {
 
-    val cassandraTriggerFrequency = "10 seconds"//"10 minutes"
-    val watermarkLength = "10 seconds"//"10 minutes"
+    val cassandraTriggerFrequency = "60 seconds"//"10 minutes"
+    val watermarkLength = "60 seconds"//"10 minutes"
     val windowLength = "30 seconds"//"60 minutes"
     val windowSliding = "10 seconds"//"30 minutes"
 
