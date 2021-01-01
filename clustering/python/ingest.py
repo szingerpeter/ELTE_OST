@@ -26,7 +26,7 @@ if __name__ == "__main__":
             for j in range(n_locations): #locations
                 pbar.update()
 
-                time = start_time + timedelta(seconds=i)
+                time = start_time + timedelta(hours=5*i)
                 k = np.random.randint(0, n_cluster)
                 record = dict(
                     timestamp=datetime.timestamp(time),
@@ -34,4 +34,4 @@ if __name__ == "__main__":
                     measurement=np.random.normal(loc=k, scale=1/(k + 1e-4))
                 )
                 res = producer.send('test', value=record)
-                sleep(0.05)
+                sleep(0.001)

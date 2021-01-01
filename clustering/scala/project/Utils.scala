@@ -1,5 +1,6 @@
 package project
 
+import moa.clusterers.`macro`.NonConvexCluster
 import net.liftweb.json.DefaultFormats
 import org.apache.flink.api.common.functions.AggregateFunction
 import org.apache.flink.api.common.serialization.{DeserializationSchema, SerializationSchema}
@@ -7,10 +8,10 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.Obje
 import net.liftweb.json.Serialization.write
 import moa.clusterers.denstream.{MicroCluster, Timestamp}
 
-class OutKafkaJsonSchema extends SerializationSchema[List[List[Measurement]]] {
+class OutKafkaJsonSchema extends SerializationSchema[List[Measurement]] {
     
-    override def serialize(t: List[List[Measurement]]): Array[Byte] = {
-        implicit val formats = DefaultFormats
+    override def serialize(t: List[Measurement]): Array[Byte] = {
+        implicit val formats: DefaultFormats.type = DefaultFormats
         write(t).getBytes()
     }
     
@@ -22,7 +23,7 @@ class InKafkaJsonSchema extends SerializationSchema[ObjectNode] with Deserializa
     import org.apache.flink.api.java.typeutils.TypeExtractor
     import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper
     
-    override def serialize(t: ObjectNode): Array[Byte] = t.toString().getBytes("UTF-8")
+    override def serialize(t: ObjectNode): Array[Byte] = t.toString.getBytes("UTF-8")
     
     override def isEndOfStream(t: ObjectNode): Boolean = false
     
@@ -57,20 +58,41 @@ class Measurement(var timestamp: Long = 0, var location_id: Long = 0, var measur
     
 }
 
-class ClusteringFeature(center: Array[Double], dimensions: Int, creationTimestamp: Long, lambda: Double, currentTimestamp: Timestamp)
-  extends MicroCluster(center, dimensions, creationTimestamp, lambda, currentTimestamp) {
-    
-    // Add additional functionality if needed
-    
-}
+//class ClusteringFeature(center: Array[Double], dimensions: Int, creationTimestamp: Long, lambda: Double, currentTimestamp: Timestamp)
+//  extends MicroCluster(center, dimensions, creationTimestamp, lambda, currentTimestamp) {
+//
+//    // Add additional functionality if needed
+//
+//}
 
 class ClusteringResult(
                         var location_id: Long = 0,
                         var cluster_label: Long = 0,
-                        var measurements: List[Measurement],
-                        var cluster_info: ClusteringFeature
+                        var measurements: List[Measurement] = List(),
+                        var cluster_info: NonConvexCluster
                       ) {
     
-    override def toString: String = { s"${location_id}: ${cluster_label}" }
+    def clusterSummary () : String = {
+        
+        if (cluster_info == null) {
+            return ""
+        }
+        
+        var center: String = "("
+        cluster_info
+          .getCenter
+          .foreach { item =>
+            center += f"$item%1.5f, "
+          }
+        center = center.dropRight(2)
+        center += ")"
+    
+        val id : Long = cluster_info.getId.toInt
+        val size : Long = cluster_info.getN.toInt
+        
+        s"ID: $id\tCenter: $center\tSize: $size"
+    }
+    
+    override def toString: String = { s"${location_id}: ${cluster_label}, |M| = ${measurements.length}" }
 }
 

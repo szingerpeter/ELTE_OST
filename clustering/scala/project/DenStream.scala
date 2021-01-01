@@ -15,7 +15,11 @@ import moa.clusterers.`macro`.dbscan.DBScan
 import moa.clusterers.denstream._
 import moa.core
 
+import scala.collection.JavaConversions._
+
 import java.{lang, util}
+import scala.math.pow
+
 
 @SerialVersionUID(1L)
 class DenPoint(val nextInstance: Instance, val timestamp: Long) extends DenseInstance(nextInstance) {
@@ -26,13 +30,13 @@ class DenPoint(val nextInstance: Instance, val timestamp: Long) extends DenseIns
 @SerialVersionUID(1L)
 class DenStream extends AbstractClusterer {
     var horizonOption: IntOption = new IntOption("horizon", 'h', "Range of the window.", 1000)
-    var epsilonOption = new FloatOption("epsilon", 'e', "Defines the epsilon neighbourhood", 0.02D, 0.0D, 0.5D)
+    var epsilonOption = new FloatOption("epsilon", 'e', "Defines the epsilon neighbourhood", 0.001D, 0.0005D, 0.01D)
     var betaOption: FloatOption = new FloatOption("beta", 'b', "", 0.2D, 0.0D, 1.0D)
     var muOption: FloatOption = new FloatOption("mu", 'm', "", 1.0D, 0.0D, 1.7976931348623157E308D)
-    var initPointsOption = new IntOption("initPoints", 'i', "Number of points to use for initialization.", 25)
+    var initPointsOption = new IntOption("initPoints", 'i', "Number of points to use for initialization.", 8)
     var offlineOption: FloatOption = new FloatOption("offline", 'o', "offline multiplier for epsilion.", 2.0D, 2.0D, 20.0D)
     var lambdaOption = new FloatOption("lambda", 'l', "", 0.25D, 0.0D, 0.5D)
-    var speedOption = new IntOption("processingSpeed", 's', "Number of incoming points per time unit.", 3, 1, 25)
+    var speedOption = new IntOption("processingSpeed", 's', "Number of incoming points per time unit.", 5, 3, 25)
     private val weightThreshold: Double = 0.01D
     private var lambda: Double = .0
     private var epsilon: Double = .0
@@ -68,7 +72,7 @@ class DenStream extends AbstractClusterer {
     
     def initialDBScan(): Unit = {
         for (p <- 0 until this.initBuffer.size) {
-            val point: DenPoint = this.initBuffer.get(p).asInstanceOf[DenPoint]
+            val point: DenPoint = this.initBuffer.get(p)
             if (!point.covered) {
                 point.covered = true
                 val neighbourhood: util.ArrayList[Integer] = this.getNeighbourhoodIDs(point, this.initBuffer, this.epsilon)
@@ -130,21 +134,21 @@ class DenStream extends AbstractClusterer {
                 while ( {
                     var16.hasNext
                 }) {
-                    c = var16.next.asInstanceOf[Cluster]
+                    c = var16.next
                     if (c.asInstanceOf[MicroCluster].getWeight < this.beta * this.mu) removalList.add(c.asInstanceOf[MicroCluster])
                 }
                 var16 = removalList.iterator().asInstanceOf[java.util.Iterator[Cluster]]
                 while ( {
                     var16.hasNext
                 }) {
-                    c = var16.next.asInstanceOf[Cluster]
+                    c = var16.next
                     this.p_micro_cluster.getClustering.remove(c)
                 }
                 var16 = this.o_micro_cluster.getClustering.iterator()
                 while ( {
                     var16.hasNext
                 }) {
-                    c = var16.next.asInstanceOf[Cluster]
+                    c = var16.next
                     val t0: Long = c.asInstanceOf[MicroCluster].getCreationTime
                     val xsi1: Double = Math.pow(2.0D, -this.lambda * (this.timestamp - t0 + this.tp).toDouble) - 1.0D
                     val xsi2: Double = Math.pow(2.0D, -this.lambda * this.tp.toDouble) - 1.0D
@@ -155,7 +159,7 @@ class DenStream extends AbstractClusterer {
                 while ( {
                     var16.hasNext
                 }) {
-                    c = var16.next.asInstanceOf[Cluster]
+                    c = var16.next
                     this.o_micro_cluster.getClustering.remove(c)
                 }
             }
@@ -163,12 +167,12 @@ class DenStream extends AbstractClusterer {
     }
     
     private def expandCluster(mc: MicroCluster, points: util.ArrayList[DenPoint], neighbourhood: util.ArrayList[Integer]): Unit = {
-        val var4: Iterator[_] = neighbourhood.iterator().asInstanceOf[scala.collection.Iterator[_]]
+        val var4: Iterator[_] = neighbourhood.iterator()
         while ( {
             var4.hasNext
         }) {
             val p: Int = var4.next.asInstanceOf[Integer]
-            val npoint: DenPoint = points.get(p).asInstanceOf[DenPoint]
+            val npoint: DenPoint = points.get(p)
             if (!npoint.covered) {
                 npoint.covered = true
                 mc.insert(npoint, this.timestamp)
@@ -181,9 +185,9 @@ class DenStream extends AbstractClusterer {
     private def getNeighbourhoodIDs(point: DenPoint, points: util.ArrayList[DenPoint], eps: Double): util.ArrayList[Integer] = {
         val neighbourIDs: util.ArrayList[Integer] = new util.ArrayList()
         for (p <- 0 until points.size) {
-            val npoint: DenPoint = points.get(p).asInstanceOf[DenPoint]
+            val npoint: DenPoint = points.get(p)
             if (!npoint.covered) {
-                val dist: Double = this.distance(point.toDoubleArray, points.get(p).asInstanceOf[DenPoint].toDoubleArray)
+                val dist: Double = this.distance(point.toDoubleArray, points.get(p).toDoubleArray)
                 if (dist < eps) neighbourIDs.add(p)
             }
         }
@@ -207,11 +211,16 @@ class DenStream extends AbstractClusterer {
     }
     
     private def distance(pointA: Array[Double], pointB: Array[Double]): Double = {
+        
+        val x = pointA
+        val y = pointB
+        require(x.length == y.length, s"The two points requires same size (${x.length}, ${y.length}")
         var distance: Double = 0.0D
-        for (i <- 0 until pointA.length) {
-            val d: Double = pointA(i) - pointB(i)
+        for (i <- x.indices) {
+            val d: Double = x(i) - y(i)
             distance += d * d
         }
+        //System.out.println("Distance:: " + Math.sqrt(distance))
         Math.sqrt(distance)
     }
     

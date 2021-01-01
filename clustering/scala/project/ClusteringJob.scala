@@ -44,13 +44,13 @@ object FraudDetectionJob {
         kafkaConfig.setProperty("group.id", "flink")
         
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
-        env.setParallelism(1) // TODO: set to 8
+        env.setParallelism(2) // TODO: set to 8
         env.getConfig.setAutoWatermarkInterval(3600)
         
         val measurements = env.addSource(
             new FlinkKafkaConsumer[ObjectNode]("test", new InKafkaJsonSchema(), kafkaConfig) // TODO
         )
-          .filter(!_.toString().equals("{}")) // filter incorrect values
+          .filter(!_.toString.equals("{}")) // filter incorrect values
           .filter(_.get("measurement") != null)
           .filter(_.get("measurement").asInt != 0)
           .map { item =>
@@ -67,50 +67,46 @@ object FraudDetectionJob {
           }
           .name("Type conversion to measurements")
         
-        val grouped = measurements
+        val dataStream = measurements
           .assignTimestampsAndWatermarks(new AssignerWithPunctuatedWatermarks[Measurement] {
               override def checkAndGetNextWatermark(t: Measurement, l: Long): Watermark = new Watermark(t._timestamp)
               
               override def extractTimestamp(t: Measurement, l: Long): Long = t._timestamp
           })
           .name("Assign watermarks")
-          //.keyBy { measurement =>
-          //    measurement._timestamp
-          //}
-          .windowAll(TumblingEventTimeWindows.of(Time.milliseconds(10)))
-          .allowedLateness(Time.milliseconds(0))
+          .windowAll(TumblingEventTimeWindows.of(Time.hours(6)))
+          .allowedLateness(Time.hours(3))
           .aggregate {
               new ListAggregateFunction[Measurement]
           }
           .name("Grouped by Days")
-          //.map { measurementList => (measurementList.head._timestamp, measurementList.length) }.
-          //.countWindowAll(5)
-          //.aggregate {
-          //    new ListAggregateFunction[List[Measurement]]
-          //}
           .flatMap { (records : List[Measurement], collector : Collector[Map[Long, List[Measurement]]]) =>
               collector.collect(records.groupBy(_._location_id))
           }
           .name("Grouped by locations")
     
-        //grouped
-        //  .map { item => item.mapValues { list => list.length } }
-        //  .name("Print lengths")
-        //  .print()
+        val outStream = dataStream
+          .keyBy(new JavaKeySelector[Map[Long, List[Measurement]], Long](value => 0))
+          .process(new ProcessClustering)
+          .name("Clustered measurements")
         
-        val asd = grouped
-          .map { item => item.values.toList }
-          
-        asd
+        val secondaryStream : DataStream[List[Measurement]] = dataStream
+          .getSideOutput(new OutputTag[List[Measurement]]("Measurements"))
+        
+        
+        outStream
+          .map { result =>
+              System.out.println(result)
+              result.measurements
+          }
           .addSink(
-              new FlinkKafkaProducer[List[List[Measurement]]](
+              new FlinkKafkaProducer[List[Measurement]](
                   "influxdb",
                   new OutKafkaJsonSchema,
                   kafkaConfig
               )
           )
           .name("InfluxDBSink")
-        
 
         env.execute("Fraud Detection")
     }

@@ -1,3 +1,5 @@
+package project
+
 import scala.math.{Pi, abs, atan2, ceil, cos, cosh, hypot, log, pow, sin, sinh, sqrt}
 
 class Complex(val re: Double, val im: Double) {
@@ -14,10 +16,10 @@ class Complex(val re: Double, val im: Double) {
     override def toString = s"Complex($re, $im)"
 }
 
-class FFT {
+class FFT extends Serializable {
     
     def log2(x: Double): Double = {
-        log(x) / log(2.0)
+        log(x) / log(2.0) + 0.00001
     }
     
     def fft(x: Array[Complex]): Array[Complex] = {
@@ -65,15 +67,5 @@ class FFT {
             X(k + n / 2) = t - c
         }
         X
-    }
-}
-
-object FFTApp extends App {
-    val FFT = new FFT()
-    val data = Array[Double](0, 4, 7, -2, 3, 5, 5, -3, 0, 1, 6.5, 7, 11.3, -4.7, 1.1)
-    
-    val result = FFT.fft(data)
-    result.foreach { item =>
-        println(item)
     }
 }

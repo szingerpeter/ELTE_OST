@@ -27,16 +27,15 @@ write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
 query_api = influxdb_client.query_api()
 
 for payload in kafka_consumer:
-    for locations_info in payload.value:
-        for measurement in locations_info:
-            print(measurement)
-            timestamp = measurement['timestamp']
-            location_id = measurement['location_id']
-            value = measurement['measurement']
+    for measurement in payload.value:
+        print(measurement)
+        timestamp = measurement['timestamp']
+        location_id = measurement['location_id']
+        value = measurement['measurement']
 
-            point = Point('Measurement') \
-                .tag('location-id', location_id) \
-                .field('value', value)
+        point = Point('Measurement') \
+            .tag('location-id', location_id) \
+            .field('value', value)
 
-            res = write_api.write(bucket=influxdb_config['bucket'], org=influxdb_config['org'], record=point)
-            print(measurement)
+        res = write_api.write(bucket=influxdb_config['bucket'], org=influxdb_config['org'], record=point)
+        print(measurement)
