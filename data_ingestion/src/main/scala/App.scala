@@ -9,11 +9,23 @@ import org.apache.spark.sql.functions._
 
 object App {
     def main(args: Array[String]) {
-        val spark = SparkSession.builder.appName("Data ingestion").config("spark.master", "local").getOrCreate()
 
-        val schema = new StructType().add("timestamp", DoubleType).add("location_id", IntegerType).add("measurement", DoubleType)
+        val spark = SparkSession
+          .builder
+          .appName("Data ingestion")
+          .config("spark.master", "local")
+          .getOrCreate()
 
-        val file = spark.readStream.schema(schema).format("csv").load("/opt/app/data/2018_electric_power_data/adapt/").withColumn("value", concat(col("timestamp"), lit(" "), col("location_id"), lit(" "), col("measurement")))
+        val schema = new StructType()
+          .add("timestamp", DoubleType)
+          .add("location_id", IntegerType)
+          .add("measurement", DoubleType)
+
+        val file = spark
+          .readStream.schema(schema)
+          .format("csv")
+          .load("/opt/app/data/2018_electric_power_data/adapt/")
+          .withColumn("value", concat(col("timestamp"), lit(" "), col("location_id"), lit(" "), col("measurement")))
 
         //file.writeStream.format("console").start().awaitTermination(10000)
 
