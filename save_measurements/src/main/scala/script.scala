@@ -36,6 +36,33 @@ def saveMeasurements(df: DataFrame): Unit = {
         .save()
 }
 
+def saveStatistics(df: DataFrame): Unit = {
+    df.selectExpr("from_unixtime(json.timestamp) as measurement_timestamp", "json.location_id", "json.measurement as value", "timestamp")
+        .groupBy(
+            window(col("timestamp"), windowLength, windowSliding),
+            col("location_id")
+        ).agg(
+            max("measurement_timestamp") as "max_measurement_time",
+            map(
+                lit("count"), count("*"),
+                lit("null_count"), sum(when(col("value").isNull, 1).otherwise(0)),
+                lit("zero_count"), sum(when(col("value") === 0, 1).otherwise(0)),
+                lit("min"), coalesce(min("value"), lit(0)),
+                lit("max"), coalesce(max("value"), lit(0)),
+                lit("mean"), coalesce(mean("value"), lit(0)),
+                lit("std"), coalesce(stddev_samp("value"), lit(0)),
+            ) as "statistics"
+        )
+        .withColumn("location_id", when(col("location_id").isNull, -1).otherwise(col("location_id")))
+        .withColumn("streaming_delay", unix_timestamp(col("window.end")) - unix_timestamp(col("max_measurement_time")))
+        .write
+        .format("org.apache.spark.sql.cassandra")
+        .option("keyspace", "test")
+        .option("table", "streaming_statistics")
+        .mode("append")
+        .save()
+}
+
 //read stream
 val df = spark
     .readStream
@@ -53,7 +80,8 @@ val df = spark
 val measurements = df
     .writeStream
     .foreachBatch( (batchDf: DataFrame, batchId: Long) => {
-        saveMeasurements(batchDf)})
+        saveMeasurements(batchDf)
+        saveStatistics(batchDf)})
     .trigger(Trigger.ProcessingTime(cassandraTriggerFrequency))
     .outputMode("append")
     .start()
