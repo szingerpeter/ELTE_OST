@@ -20,4 +20,5 @@ out
   .option("kafka.bootstrap.servers", "kafka:9093")
   .option("topic", "test")
   .start()
-  .awaitTermination(10000)
+  .awaitTermination()
+

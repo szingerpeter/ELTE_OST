@@ -24,7 +24,6 @@ object App {
             .option("kafka.bootstrap.servers", "localhost:9092")
             .option("topic", "test")
             .start()
-            .awaitTermination(10000)
-        spark.stop()
+            .awaitTermination()
     }
 }
