@@ -39,6 +39,25 @@ services:
       - "4040:4040"
     volumes:
       - "./data_ingestion/data:/opt/app/mounted_data/:ro"
+    command: tail -F /dev/null
+  forecasting:
+    build:
+      context: ./forecasting
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+      - 3003:3003
+    expose:
+      - "5000"
+      - "3003"
+    command: tail -F /dev/null
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 9000:3000
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-simple-json-datasource
   cassandra:
     build:
       context: ./cassandra
