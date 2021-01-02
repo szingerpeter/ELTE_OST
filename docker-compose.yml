@@ -2,12 +2,14 @@ version: "3"
 services:
   zookeeper:
     image: zookeeper:latest
+    restart: "on-failure:3"
     environment:
       ZOOKEEPER_CLIENT_PORT: "2181"
     ports:
       - "2181:2181"
   kafka:
     image: wurstmeister/kafka:latest
+    restart: "on-failure:3"
     depends_on:
       - zookeeper
     ports:
@@ -30,8 +32,11 @@ services:
     build:
       context: ./data_ingestion
       dockerfile: Dockerfile
+    restart: "on-failure:3"
     depends_on:
       - kafka
+    ports:
+      - "4040:4040"
     volumes:
       - "./data_ingestion/data:/opt/app/mounted_data/:ro"
     command: tail -F /dev/null
@@ -53,3 +58,24 @@ services:
       - 9000:3000
     environment:
       - GF_INSTALL_PLUGINS=grafana-simple-json-datasource
+  cassandra:
+    build:
+      context: ./cassandra
+      dockerfile: Dockerfile
+    restart: "on-failure:3"
+    expose:
+      - "9042"
+    environment:
+      CASSANDRA_KEYSPACE: test
+  save_measurements:
+    build:
+      context: ./save_measurements
+      dockerfile: Dockerfile
+    restart: "on-failure:3"
+    ports:
+      - "4041:4040"
+    depends_on:
+      - kafka
+      - cassandra
+      - data_ingestion
+
