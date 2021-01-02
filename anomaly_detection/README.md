@@ -16,6 +16,7 @@ For better results, seperate the anomaly detection into:
  
  Eventually:
  - Add visualization
+ - Replace kafka-python/ KafkaConsumer/Producer based functions by native functions of Spark Structured Streaming
 
 
 
