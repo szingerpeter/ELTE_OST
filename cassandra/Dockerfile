@@ -8,6 +8,6 @@ RUN chmod +x /entrypoint-wrap.sh
 
 COPY . .
 
-ENTRYPOINT ["/entrypoint-wrap.sh"]
+#ENTRYPOINT ["/entrypoint-wrap.sh"]
 
 CMD ["cassandra", "-f"]
