@@ -1,0 +1,2 @@
+## Secondary dataset: weather data
+This data was generated using datosclima.com (https://datosclima.es/Aemethistorico/Tempestad.php), using Madrid as a reference from 2008 to 2020. This website does not produce a downloadable file, so the text of the page was copied and formatted to include only the data.
