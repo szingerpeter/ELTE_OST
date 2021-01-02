@@ -41,7 +41,7 @@ object Forecasting {
 
     val properties = new Properties()
     properties.setProperty("bootstrap.servers", KAFKA_BOOTSTRAP_SERVER)
-    properties.setProperty("group.id", "flink")
+    properties.setProperty("group.id", "forecasting")
     properties.setProperty("zookeeper.connect", ZOOKEEPER_CONNECTION)
 
 
