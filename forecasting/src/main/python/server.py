@@ -34,7 +34,7 @@ class Client(threading.Thread):
             if data != "":
                 print("Client " + str(self.id) + ": " + str(data.decode("utf-8")))
                 
-                #forecastingModel.retrain(str(data.decode("utf-8")))
+                forecastingModel.retrain(str(data.decode("utf-8")))
 
                 for client in connections:
                     if client.id != self.id:
