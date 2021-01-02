@@ -30,20 +30,13 @@ RUN echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.lis
 
 RUN wget -q https://downloads.apache.org/spark/spark-3.0.1/spark-3.0.1-bin-hadoop3.2.tgz -O /tmp/spark.tgz \
         && tar -xvf /tmp/spark.tgz -C /opt/ \
-        && ln -s /opt/spark-3.0.1-bin-hadoop3.2/ /usr/local/spark 
+        && ln -s /opt/spark-3.0.1-bin-hadoop3.2/ /usr/local/spark
 
 ENV SPARK_HOME="/usr/local/spark"
 ENV PATH="${SPARK_HOME}/bin:${PATH}"
 
-RUN mkdir -p /opt/app 
+RUN mkdir -p /opt/app
 WORKDIR /opt/app
-
-RUN mkdir /opt/app/mounted_data
-VOLUME /opt/app/mounted_data
-
-COPY requirements.txt requirements.txt
-
-RUN pip3 install -r requirements.txt
 
 COPY . .
 
@@ -53,3 +46,4 @@ RUN chmod +x docker-entrypoint.sh\
     && dos2unix docker-entrypoint.sh
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
+
