@@ -6,6 +6,29 @@ The module is responsible to simulate data ingestion.
 
 First, convert '\*.h5' files to '\*.csv' files. Then, we process the '\*.csv' files using spark-streaming.
 
+### Approach 1
+
+In order to avoid re-running always the pre-processing script, first run it on your local machine via:
+- Place the original '\*.zip' file in the data folder
+- Unzip the compressed file to data folder via `unzip data/2018_Electric_power_data.zip -d data/`
+- Run the preprocessing script via `python3 src/main/python/preprocess.py --mainfolder "data/2018 Electric power data/"`
+The resulting file structure should be the following:
+
+
+```.
++-- data
+|   +-- 2018 Electric power data
+|   |   +-- train
+|   |   |   +-- Xm1
+|   |   |   |   +-- *.h5
+|   |   +-- adapt
+|   |   |   +-- *.h5
+...
+```
+
+### Approach 2
+Otherwise, you can copy the .zip file in the data folder and the file will be decompressed in the container and preprocessed.
+
 ## How to run
 
 On your host machine in this directory, you need to have a /data/ folder with the original dataset (.zip). 
