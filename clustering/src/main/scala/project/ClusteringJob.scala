@@ -40,8 +40,9 @@ object FraudDetectionJob {
         val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
         
         val kafkaConfig = new Properties()
-        kafkaConfig.setProperty("bootstrap.servers", "127.0.0.1:9092")
+        kafkaConfig.setProperty("bootstrap.servers", "kafka:9093")
         kafkaConfig.setProperty("group.id", "flink")
+        kafkaConfig.setProperty("zookeeper.connect", "zookeeper:2181")
         
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
         env.setParallelism(2) // TODO: set to 8

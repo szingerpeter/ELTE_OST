@@ -11,3 +11,12 @@ at the point of data ingestion:
 You need to copy the original \.zip file to the folder 'data\_ingestion/data' and:
 
 `docker-compose up` will start all services. data\_ingestion takes relatively long, so be patient. To check if Kafka receives any messages log into the Kafka service by `docker-compose exec kafka bash` and run `kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning`
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana/provisioning/:/etc/grafana/provisioning/
+      - grafana/dashboard.json:/etc/grafana/dashboard.json
+      - grafana/grafana.ini:/etc/grafana/grafana.ini
