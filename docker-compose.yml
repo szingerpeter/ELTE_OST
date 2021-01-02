@@ -2,7 +2,8 @@ version: "3"
 services:
   
   zookeeper:
-    image: wurstmeister/zookeeper:latest
+    image: zookeeper:latest
+    restart: "on-failure:3"
     environment:
       ZOOKEEPER_CLIENT_PORT: "2181"
     ports:
@@ -10,6 +11,7 @@ services:
 
   kafka:
     image: wurstmeister/kafka:latest
+    restart: "on-failure:3"
     depends_on:
       - zookeeper
     ports:
@@ -27,17 +29,20 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: /tmp/kafka-logs/broker1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-      KAFKA_CREATE_TOPICS: "test:1:1"
+      KAFKA_CREATE_TOPICS: "test:1:1,influxdb:1:1"
 
   data_ingestion:
     build:
       context: ./data_ingestion
       dockerfile: Dockerfile
+    restart: "on-failure:3"
     depends_on:
       - kafka
+    ports:
+      - "4040:4040"
     volumes:
-      - "./data_ingestion/data:/opt/app/mounted_data/"
-
+      - "./data_ingestion/data:/opt/app/mounted_data/:ro"
+    command: tail -F /dev/null
   clustering:
     build: 
       context: ./clustering
@@ -68,4 +73,42 @@ services:
     command: "taskmanager.sh start-foreground"
     environment:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
+  forecasting:
+    build:
+      context: ./forecasting
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+      - 3003:3003
+    expose:
+      - "5000"
+      - "3003"
+    command: tail -F /dev/null
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 9000:3000
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-simple-json-datasource
+  cassandra:
+    build:
+      context: ./cassandra
+      dockerfile: Dockerfile
+    restart: "on-failure:3"
+    expose:
+      - "9042"
+    environment:
+      CASSANDRA_KEYSPACE: test
+  save_measurements:
+    build:
+      context: ./save_measurements
+      dockerfile: Dockerfile
+    restart: "on-failure:3"
+    ports:
+      - "4041:4040"
+    depends_on:
+      - kafka
+      - cassandra
+      - data_ingestion
 

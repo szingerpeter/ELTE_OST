@@ -76,13 +76,18 @@ object FraudDetectionJob {
           })
           .name("Assign watermarks")
           .windowAll(TumblingEventTimeWindows.of(Time.hours(6)))
-          .allowedLateness(Time.hours(3))
+          .allowedLateness(Time.days(1))
           .aggregate {
               new ListAggregateFunction[Measurement]
           }
           .name("Grouped by Days")
           .flatMap { (records : List[Measurement], collector : Collector[Map[Long, List[Measurement]]]) =>
               collector.collect(records.groupBy(_._location_id))
+          }
+          .map { item =>
+              item.mapValues { measurements =>
+                  measurements.sortBy(_._timestamp)
+              }
           }
           .name("Grouped by locations")
     

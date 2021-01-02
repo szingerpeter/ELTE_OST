@@ -6,9 +6,6 @@ RUN mvn clean install
 
 FROM flink:1.12
 
-RUN apt-get update \
-    && apt-get install -y unzip dos2unix
-
 WORKDIR /opt/flink/bin
 
 # Copy Click Count Job
@@ -18,8 +15,6 @@ COPY docker-entrypoint.sh opt/clustering/docker-entrypoint.sh
 COPY wait-for-it.sh opt/clustering/wait-for-it.sh
 
 RUN chmod +x opt/clustering/docker-entrypoint.sh\
-    && chmod +x opt/clustering/wait-for-it.sh\
-    && dos2unix opt/clustering/wait-for-it.sh\
-    && dos2unix opt/clustering/docker-entrypoint.sh
+    && chmod +x opt/clustering/wait-for-it.sh
 
-ENTRYPOINT ["opt/clustering//docker-entrypoint.sh"]
+CMD ["bash", "opt/clustering/docker-entrypoint.sh"]

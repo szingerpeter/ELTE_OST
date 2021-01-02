@@ -52,13 +52,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--files", dest = "files", type = str, nargs = "+", help = "files to be processed")
     parser.add_argument("--folder", dest = "folder", type = str, nargs = 1, help = "folder to be processed")
+    parser.add_argument("--mainfolder", dest = "mainfolder", type = str, nargs = 1, help = "main folder to process")
     args = parser.parse_args()
     if args.files is not None and len(args.files) > 0:
         for file in args.files:
             process_file(file)
     elif args.folder is not None:
-        for fn in os.listdir(args.folder):
-            process_file(args.folder + fn)
+        folder = args.folder[0]
+        for fn in os.listdir(folder):
+            process_file(folder + fn)
+    elif args.mainfolder is not None:
+        mainfolder = args.mainfolder[0]
+        for dir in ["adapt/", "train/Xm1/"]:
+            for fn in os.listdir(mainfolder + dir):
+                if "h5" in fn:
+                    process_file(mainfolder + dir + fn)
     else:
         for dir in ["data/2018_electric_power_data/adapt/", "data/2018_electric_power_data/train/Xm1/"]:
             for fn in os.listdir(dir):
