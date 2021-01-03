@@ -35,9 +35,6 @@ class Connector:
         Input:
         payload: json object coming from kafka
 
-        Output:
-        Point: influxdb point object
-
         Example:
         Point('Measurement') \
             .tag('location-id', j) \
@@ -45,7 +42,7 @@ class Connector:
             .field('measurement', np.random.normal(loc=k, scale=k)) \
             .time(time)
         """
-        return Point('Point')
+        pass
 
     def write_db(self, point):
         self._write_api.write(
@@ -56,7 +53,7 @@ class Connector:
 
     def listen(self):
         for payload in self._kafka_consumer:
-            self._process(payload)
+            self._process(payload.value)
 
 class AnnomalyConnector(Connector):
 
@@ -82,13 +79,15 @@ class ClusteringConnector(Connector):
         super(ClusteringConnector, self).__init__(kafka_topic=kafka_topic)
 
     def _process(self, payload):
-        for measurement in payload.value:
+        for measurement in payload:
             timestamp = measurement['timestamp']
             location_id = measurement['location_id']
             value = measurement['measurement']
 
-            point = Point('Clustering') \
-                .tag('location-id', measurement['location_id']) \
-                .tag('cluster_id', measurement['cluster_id']) \
-                .field('measurement', measurement['measurement']) \
-                .time(measurement['timestamp'])
+            self.write_db(
+                Point('Clustering') \
+                    .tag('location-id', measurement['location_id']) \
+                    .tag('cluster_id', measurement['cluster_id']) \
+                    .field('measurement', measurement['measurement']) \
+                    .time(measurement['timestamp'])
+            )
