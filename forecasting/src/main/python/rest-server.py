@@ -23,7 +23,14 @@ methods = ('GET', 'POST')
 
 forecastingModel = ForecastingModel()
 
-cassandra_session = Cluster(['cassandra'], port=9042).connect()
+cassandra_session = None
+while cassandra_session is None:
+    try:
+        # connect
+        cassandra_session = Cluster(['cassandra'], port=9042).connect()
+        time.sleep(5)
+    except:
+         pass
 
 targets = list(range(0,1916))
 
