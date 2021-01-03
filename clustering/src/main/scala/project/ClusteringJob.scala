@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory
 
 import java.util.{Date, Properties}
 
-object FraudDetectionJob {
+object ClusteringJob {
     
-    private val LOG = LoggerFactory.getLogger(FraudDetectionJob.getClass)
+    private val LOG = LoggerFactory.getLogger(ClusteringJob.getClass)
     
     @throws[Exception]
     def main(args: Array[String]): Unit = {
