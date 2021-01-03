@@ -16,7 +16,7 @@ import pandas as pd
 
 
 batch_size = 20
-bootstrap_servers_config = ['localhost:9092']
+bootstrap_servers_config = ['kafka:9093']
 incoming_topic = "test"
 outgoing_topic = "anomaly"
 
@@ -67,7 +67,8 @@ if __name__ == "__main__":
          auto_offset_reset='earliest',
          enable_auto_commit=True,
          group_id='my-group',
-         value_deserializer=lambda x: loads(x.decode('utf-8')))
+         value_deserializer=lambda x: loads(x.decode('utf-8')),
+         api_version=(0,11,5))
     
     producer = KafkaProducer(bootstrap_servers = bootstrap_servers_config,
           api_version=(0,11,5),
