@@ -9,7 +9,7 @@ class Connector:
 
         self._kafka_consumer = KafkaConsumer(
             'kafka_topic',
-            bootstrap_servers=['127.0.0.1:9092'],
+            bootstrap_servers=['kafka:9093'],
             enable_auto_commit=True,
             value_deserializer=lambda x: loads(x.decode('utf-8'))
         )
