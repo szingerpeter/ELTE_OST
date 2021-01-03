@@ -19,14 +19,14 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 #RUN wget -q https://downloads.lightbend.com/scala/2.12.2/scala-2.12.2.tgz -O /tmp/scala.tgz \
 #    && tar -xvf /tmp/scala.tgz -C /opt/ \
 #    && ln -s /opt/scala-2.12.2 /usr/local/scala
-#
+
 #ENV SCALA_HOME="/usr/local/scala"
 #ENV PATH="${SCALA_HOME}/bin:${PATH}"
-#
-#RUN echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list \
-#    && curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | apt-key add \
-#    && apt-get -y update \
-#    && apt-get -y install sbt
+
+RUN echo "deb https://dl.bintray.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list \
+    && curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | apt-key add \
+    && apt-get -y update \
+    && apt-get -y install sbt
 
 RUN wget -q https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz -O /tmp/kafka.tgz \
     && tar -xvf /tmp/kafka.tgz -C /opt/ \
