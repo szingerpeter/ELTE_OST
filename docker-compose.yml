@@ -52,12 +52,13 @@ services:
       - "3003"
     command: tail -F /dev/null
   grafana:
-    image: grafana/grafana
+    image: bitnami/grafana:latest
     container_name: grafana
     ports:
       - 9000:3000
     environment:
-      - GF_INSTALL_PLUGINS=grafana-simple-json-datasource
+      - GF_INSTALL_PLUGINS=grafana-simple-json-datasource,cassandra=https://github.com/HadesArchitect/GrafanaCassandraDatasource/releases/download/0.3.12/cassandra-datasource-0.3.12.zip
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=hadesarchitect-cassandra-datasource
   cassandra:
     build:
       context: ./cassandra
