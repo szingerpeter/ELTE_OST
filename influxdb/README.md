@@ -1,6 +1,6 @@
 # Folder for installing and managing influxdb
 
-## Setup:
+### Setup
 1. run ```docker-compose```
 2. Go to ```localhost:8086```
 3. Provide
@@ -17,3 +17,7 @@ from(bucket: "ost_sm")
   |> yield(name: "mean")
 ```
 7. Submit
+
+### To-test if you receive data
+1. Run ```python3 src/test.py```
+2. Reload the dashboard
