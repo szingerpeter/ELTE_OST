@@ -1,9 +1,9 @@
 package project
 
-import com.yahoo.labs.samoa.instances.{Attribute, DenseInstance, Instances, InstancesHeader}
 import moa.clusterers.`macro`.NonConvexCluster
 import moa.core.FastVector
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
+import com.yahoo.labs.samoa.instances.{Attribute, DenseInstance, Instances, InstancesHeader}
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction
 import org.apache.flink.streaming.api.scala.OutputTag
 import org.apache.flink.api.scala.createTypeInformation
@@ -13,10 +13,11 @@ import java.util
 import scala.collection.JavaConversions._
 import scala.math.sqrt
 
-class ProcessClustering(isDebug : Boolean = false) extends KeyedProcessFunction[Long, Map[Long, List[Measurement]], ClusteringResult] {
+
+class ProcessClustering(isDebug : Boolean = false) extends KeyedProcessFunction[Long, Map[Long, List[Measurement]], List[ClusteringResult]] {
     
     type In = Map[Long, List[Measurement]]
-    type Out = ClusteringResult
+    type Out = List[ClusteringResult]
     
     lazy val state : ValueState[DenStream] = getRuntimeContext
       .getState(
@@ -81,7 +82,7 @@ class ProcessClustering(isDebug : Boolean = false) extends KeyedProcessFunction[
         }
     }
     
-    def extractResults(input : Map[Long, DenseInstance], clustering : DenStream) : List[(Long, Long, NonConvexCluster)] = {
+    def extractResults(input : Map[Long, DenseInstance], clustering : DenStream) : List[(Long, Array[Double], Long, NonConvexCluster)] = {
         
         // Get Clustering result based on prior points
         val result = this
@@ -92,7 +93,7 @@ class ProcessClustering(isDebug : Boolean = false) extends KeyedProcessFunction[
           .asInstanceOf[util.ArrayList[NonConvexCluster]]
         
         result.foreach { cluster =>
-            System.out.println(new Out(cluster_info = cluster).clusterSummary())
+            System.out.println(new ClusteringResult(cluster_info = cluster).clusterSummary())
         }
     
         // Assign labels based on the size of cluster overlapping area
@@ -107,7 +108,7 @@ class ProcessClustering(isDebug : Boolean = false) extends KeyedProcessFunction[
                     cluster_info = cluster
                 }
             }
-            (location._1, label, cluster_info)
+            (location._1, location._2.toDoubleArray(),  label, cluster_info)
         }.toList
     }
     
@@ -141,22 +142,26 @@ class ProcessClustering(isDebug : Boolean = false) extends KeyedProcessFunction[
         this.state.update(clustering)
         
         // Extract results && collect them
-        extractResults(input, clustering).foreach { item =>
+        val results = extractResults(input, clustering).map { item =>
           
             val location_id = item._1
-            val label = item._2
-            val info = item._3
+            val features = item._2
+            val label = item._3
+            val info = item._4
             
             val measurements = in.get(location_id) match {
                 case Some(value) => value
                 case None => List()
             }
             
-            val output : Out = new Out(location_id, label, measurements, info)
-            collector.collect(output)
+            val output : ClusteringResult = new ClusteringResult(location_id, label, measurements, info, features)
     
             // Put original measurements into secondary output
             context.output(sideOutputTag, measurements)
+
+            output
         }
+
+        collector.collect(results)
     }
 }

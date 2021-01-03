@@ -95,15 +95,21 @@ object ClusteringJob {
           .keyBy(new JavaKeySelector[Map[Long, List[Measurement]], Long](value => 0))
           .process(new ProcessClustering)
           .name("Clustered measurements")
-        
+
+        val clusteringStream = outStream
+          .keyBy(new JavaKeySelector[List[ClusteringResult], Long](value => 0))
+          .process(new EvaluateClustering)
+          .name("Evaluated clustering")
+
         val secondaryStream : DataStream[List[Measurement]] = dataStream
           .getSideOutput(new OutputTag[List[Measurement]]("Measurements"))
         
         
-        outStream
-          .map { result =>
-              System.out.println(result)
-              result.measurements
+        clusteringStream
+          .flatMap { (result: (List[ClusteringResult], Double), collector: Collector[List[Measurement]]) =>
+              System.out.println(s"measurements: ${result._1}")
+              System.out.println(s"clustering coefficient: ${result._2}")
+              result._1.foreach(x => collector.collect(x.measurements))
           }
           .addSink(
               new FlinkKafkaProducer[List[Measurement]](
@@ -114,6 +120,7 @@ object ClusteringJob {
           )
           .name("InfluxDBSink")
 
-        env.execute("Fraud Detection")
+
+        env.execute("Clustering")
     }
 }

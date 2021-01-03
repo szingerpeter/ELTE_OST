@@ -69,7 +69,8 @@ class ClusteringResult(
                         var location_id: Long = 0,
                         var cluster_label: Long = 0,
                         var measurements: List[Measurement] = List(),
-                        var cluster_info: NonConvexCluster
+                        var cluster_info: NonConvexCluster,
+                        var features: Array[Double] = Array()
                       ) {
     
     def clusterSummary () : String = {
@@ -93,6 +94,6 @@ class ClusteringResult(
         s"ID: $id\tCenter: $center\tSize: $size"
     }
     
-    override def toString: String = { s"${location_id}: ${cluster_label}, |M| = ${measurements.length}" }
+    override def toString: String = { s"${location_id}: ${cluster_label}, |M| = ${measurements.length}, features: ${features}" }
 }
 
