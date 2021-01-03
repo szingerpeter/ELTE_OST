@@ -11,6 +11,9 @@ while true; do
     sleep 1
 done
 
+echo "Cleaning bucket from previous initialization..."
+influx bucket delete -n ost_sm -o elte --token eit
+influx bucket create -n ost_sm -o elte --token eit
 echo "Creating user profile..."
 yes | influx setup \
     --bucket ost_sm \
@@ -22,3 +25,6 @@ yes | influx setup \
 
 echo "Staying awake..."
 sleep infinity
+
+python3 annomaly_connector.py &
+python3 clustering_connector.py &
