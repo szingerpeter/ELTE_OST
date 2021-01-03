@@ -10,6 +10,7 @@ import org.apache.spark.sql.streaming.Trigger
 import com.datastax.spark.connector._
 
 import java.sql.Timestamp
+import java.sql.Date
 
 
 object App {
@@ -38,6 +39,12 @@ object App {
                 StructField("location_id", IntegerType),
                 StructField("measurement", DoubleType)
         ))
+        
+        val weather_jsonSchema = StructType(Array(
+                StructField("date", StringType),
+                StructField("max", DoubleType),
+                StructField("min", DoubleType)
+        ))
 
         //read stream
         val source = spark
@@ -51,6 +58,17 @@ object App {
                     .selectExpr("CAST(key as STRING)", "CAST(value as STRING)", "timestamp").as[(String, String, Timestamp)]
                     .withColumn("json", from_json(col("value"), jsonSchema))
 
+        val weather_source = spark
+                    .readStream
+                    .format("kafka")
+                    .option("kafka.bootstrap.servers", "kafka:9093")
+                    .option("subscribe", "weather")
+                    .option("startingOffsets", "earliest")
+                    .load()
+                    .withWatermark("timestamp", watermarkLength)
+                    .selectExpr("CAST(key as STRING)", "CAST(value as STRING)", "timestamp").as[(String, String, Timestamp)]
+                    .withColumn("json", from_json(col("value"), weather_jsonSchema))
+
 
         //save measurements
         val sink = source
@@ -58,6 +76,14 @@ object App {
             .foreachBatch( (batchDf: DataFrame, batchId: Long) => {
                 saveMeasurements(batchDf)
                 saveStatistics(batchDf)})
+            .trigger(Trigger.ProcessingTime(cassandraTriggerFrequency))
+            .outputMode("append")
+            .start()
+
+        val weather_sink = weather_source
+            .writeStream
+            .foreachBatch( (batchDf: DataFrame, batchId: Long) => {
+                saveWeather(batchDf)})
             .trigger(Trigger.ProcessingTime(cassandraTriggerFrequency))
             .outputMode("append")
             .start()
@@ -101,6 +127,17 @@ object App {
             .format("org.apache.spark.sql.cassandra")
             .option("keyspace", "test")
             .option("table", "streaming_statistics")
+            .mode("append")
+            .save()
+    }
+
+    def saveWeather(df: DataFrame): Unit = {
+        df
+            .selectExpr("json.date", "json.max", "json.min")
+            .write
+            .format("org.apache.spark.sql.cassandra")
+            .option("keyspace", "test")
+            .option("table", "weather")
             .mode("append")
             .save()
     }

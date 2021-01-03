@@ -27,7 +27,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: /tmp/kafka-logs/broker1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-      KAFKA_CREATE_TOPICS: "test:1:1"
+      KAFKA_CREATE_TOPICS: "test:1:1,weather:1:1"
   data_ingestion:
     build:
       context: ./data_ingestion
@@ -39,6 +39,7 @@ services:
       - "4040:4040"
     volumes:
       - "./data_ingestion/data:/opt/app/mounted_data/:ro"
+    command: tail -F /dev/null
   cassandra:
     build:
       context: ./cassandra
