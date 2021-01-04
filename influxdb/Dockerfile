@@ -1,7 +1,8 @@
 FROM ubuntu:18.04
 
 RUN apt-get update \
-    && apt-get install -y unzip vim curl wget gpg-agent expect
+    && apt-get install -y unzip vim curl wget gpg-agent expect \
+    && apt-get install -y unzip vim curl wget dos2unix
 
 RUN apt-get install -y --no-install-recommends software-properties-common
 
@@ -18,7 +19,8 @@ RUN gpg --verify /tmp/influxdb.tar.gz.asc /tmp/influxdb.tar.gz
 RUN mkdir -p /opt/app
 
 COPY ./docker-entrypoint.sh /opt/app/docker-entrypoint.sh
-RUN chmod +x /opt/app/docker-entrypoint.sh
+RUN chmod +x /opt/app/docker-entrypoint.sh \
+    && dos2unix /opt/app/docker-entrypoint.sh
 
 CMD ["bash", "/opt/app/docker-entrypoint.sh"]
 
