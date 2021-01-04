@@ -3,7 +3,8 @@ FROM ubuntu:18.04
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
 RUN apt-get update \
-    && apt-get install -y unzip vim curl wget
+    && apt-get install -y unzip vim curl wget \
+    && apt-get install -y unzip vim curl wget dos2unix
 
 RUN apt-get install -y --no-install-recommends software-properties-common
 
@@ -41,7 +42,9 @@ WORKDIR /opt/app
 COPY . .
 
 RUN chmod +x docker-entrypoint.sh\
-    && chmod +x wait-for-it.sh
+    && chmod +x wait-for-it.sh\
+    && dos2unix wait-for-it.sh\
+    && dos2unix docker-entrypoint.sh
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
