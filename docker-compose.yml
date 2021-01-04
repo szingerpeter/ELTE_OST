@@ -43,36 +43,6 @@ services:
     volumes:
       - "./data_ingestion/data:/opt/app/mounted_data/:ro"
     command: tail -F /dev/null
-  clustering:
-    build: 
-      context: ./clustering
-      dockerfile: Dockerfile
-    depends_on: 
-      - kafka
-      - data_ingestion
-      - jobmanager
-    volumes:
-      - ./clustering/conf:/opt/flink/conf
-
-  jobmanager:
-    image: flink:1.12
-    command: "jobmanager.sh start-foreground"
-    volumes:
-      - ./clustering/conf:/opt/flink/conf
-    ports:
-      - 8081:8081
-    environment:
-      - JOB_MANAGER_RPC_ADDRESS=jobmanager
-
-  taskmanager:
-    image: flink:1.12
-    volumes:
-      - ./clustering/conf:/opt/flink/conf
-    depends_on:
-      - jobmanager
-    command: "taskmanager.sh start-foreground"
-    environment:
-      - JOB_MANAGER_RPC_ADDRESS=jobmanager
   forecasting:
     build:
       context: ./forecasting
