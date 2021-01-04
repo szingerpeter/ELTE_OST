@@ -29,7 +29,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: /tmp/kafka-logs/broker1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-      KAFKA_CREATE_TOPICS: "test:1:1,influxdb:1:1"
+      KAFKA_CREATE_TOPICS: "test:1:1,influxdb:1:1,clustering:1:1"
 
   data_ingestion:
     build:
@@ -43,6 +43,36 @@ services:
     volumes:
       - "./data_ingestion/data:/opt/app/mounted_data/:ro"
     command: tail -F /dev/null
+  clustering:
+    build: 
+      context: ./clustering
+      dockerfile: Dockerfile
+    depends_on: 
+      - kafka
+      - data_ingestion
+      - jobmanager
+    volumes:
+      - ./clustering/conf:/opt/flink/conf
+
+  jobmanager:
+    image: flink:1.12
+    command: "jobmanager.sh start-foreground"
+    volumes:
+      - ./clustering/conf:/opt/flink/conf
+    ports:
+      - 8081:8081
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+
+  taskmanager:
+    image: flink:1.12
+    volumes:
+      - ./clustering/conf:/opt/flink/conf
+    depends_on:
+      - jobmanager
+    command: "taskmanager.sh start-foreground"
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
   forecasting:
     build:
       context: ./forecasting
