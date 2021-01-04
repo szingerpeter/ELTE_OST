@@ -43,7 +43,8 @@ object App {
         val weather_jsonSchema = StructType(Array(
                 StructField("date", StringType),
                 StructField("max", DoubleType),
-                StructField("min", DoubleType)
+                StructField("min", DoubleType),
+                StructField("location_id", IntegerType)
         ))
 
         //read stream
@@ -133,7 +134,8 @@ object App {
 
     def saveWeather(df: DataFrame): Unit = {
         df
-            .selectExpr("json.date", "json.max", "json.min")
+            .selectExpr("to_date(json.date) as date", "json.max", "json.min", "json.location_id")
+            .filter(col("date").isNotNull)
             .write
             .format("org.apache.spark.sql.cassandra")
             .option("keyspace", "test")

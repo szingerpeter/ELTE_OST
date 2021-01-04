@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS test.weather(
-  date ascii,
+  date timestamp,
   max double,
   min double,
-  PRIMARY KEY(date)
-);
+  location_id SMALLINT,
+  PRIMARY KEY(location_id, date)
+)
+WITH CLUSTERING ORDER BY (date DESC);

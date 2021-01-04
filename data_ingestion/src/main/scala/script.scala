@@ -15,6 +15,7 @@ val weather_schema = new StructType()
   .add("date", StringType)
   .add("max", DoubleType)
   .add("min", DoubleType)
+  .add("location_id", IntegerType)
 
 val file = spark
   .readStream
