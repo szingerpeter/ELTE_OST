@@ -55,6 +55,9 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-#RUN chmod +x docker-entrypoint.sh
-#CMD ["bash"]
-#CMD ["bash", "docker-entrypoint.sh"]
+RUN apt-get update \
+    && apt-get install -y unzip vim curl wget dos2unix
+
+RUN chmod +x docker-entrypoint.sh\
+	&& dos2unix docker-entrypoint.sh
+CMD ["bash", "docker-entrypoint.sh"]
