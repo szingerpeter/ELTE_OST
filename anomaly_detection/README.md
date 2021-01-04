@@ -1,22 +1,19 @@
 # Anomaly detection
 
 Simple anomaly detection using spark dataframes/pyspark. 
-detection_process.py reads from the kafka topic "test" and produces a new kafka topic. 
+detection_process_to_influxDB.py reads from the kafka topic "test", decomposed time-series and sends data to InfluxDB
+
+
+# How To Run (To be fixed)
+build with docker-compose up --build anomaly_detection
+run image
+run docker-entrypoint in container
 
 # To Do 
 
-- Set up Docker Environment
-- Connect to Docker-compose
-- Maybe seperate settings in a config file
+- Fix Docker env, so it runs via docker-compose
 
-At the moment, the model is fitted and applied to small batches at the time. 
-For better results, seperate the anomaly detection into:
- - 1. Model fitting in large batches on a greater amount of data, save parameters in DB or file
- - 2. Applying the model "live" on small batches, using the parameters from 1.)
- 
- Eventually:
- - Add visualization
- - Replace kafka-python/ KafkaConsumer/Producer based functions by native functions of Spark Structured Streaming
+
 
 
 
