@@ -29,7 +29,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: /tmp/kafka-logs/broker1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-      KAFKA_CREATE_TOPICS: "test:1:1,influxdb:1:1,clustering:1:1"
+      KAFKA_CREATE_TOPICS: "test:1:1,weather:1:1,influxdb:1:1,clustering:1:1"
 
   data_ingestion:
     build:
@@ -84,13 +84,19 @@ services:
       - "5000"
       - "3003"
     command: tail -F /dev/null
+  weather:
+    build:
+      context: ./weather
+      dockerfile: Dockerfile
+    command: tail -F /dev/null
   grafana:
-    image: grafana/grafana
+    image: bitnami/grafana:latest
     container_name: grafana
     ports:
       - 9000:3000
     environment:
-      - GF_INSTALL_PLUGINS=grafana-simple-json-datasource
+      - GF_INSTALL_PLUGINS=grafana-simple-json-datasource,cassandra=https://github.com/HadesArchitect/GrafanaCassandraDatasource/releases/download/0.3.12/cassandra-datasource-0.3.12.zip
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=hadesarchitect-cassandra-datasource
   cassandra:
     build:
       context: ./cassandra

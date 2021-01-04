@@ -12,6 +12,10 @@ else
   python src/main/python/preprocess.py
 fi
 
+mkdir "data/weather-data"
+
+cp "mounted_data/weather-data.csv" "data/weather-data/weather-data.csv"
+
 echo "packaging scala source code"
 if ! [[ -d "target" ]]; then
   sbt package
