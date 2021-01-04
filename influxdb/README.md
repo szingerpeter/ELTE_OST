@@ -10,7 +10,7 @@
 5. Click on the Script editor button
 6. Copy paste the following query:
 ```
-from(bucket: "ost_sm")
+from(bucket: "clustering")
   |> range(start: time(v: "2009-07-01"), stop: time(v: "2010-07-01"))
   |> filter(fn: (r) => r["_measurement"] == "Measurement")
   |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
