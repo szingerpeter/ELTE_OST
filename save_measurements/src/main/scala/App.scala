@@ -67,7 +67,7 @@ object App {
 
     def saveMeasurements(df: DataFrame): Unit = {
         df
-            .selectExpr("json.timestamp", "json.location_id", "json.measurement as value")
+            .selectExpr("from_unixtime(json.timestamp) as timestamp", "json.location_id", "json.measurement as value")
             .filter(col("value").isNotNull)
             .write
             .format("org.apache.spark.sql.cassandra")
