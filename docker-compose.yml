@@ -96,3 +96,12 @@ services:
       context: ./kafka_influxdb_connector
       dockerfile: Dockerfile
 
+  batch_processing:
+    build:
+      context: ./batch_processing
+      dockerfile: Dockerfile
+    restart: "on-failure:3"
+    depends_on:
+      - kafka
+      - cassandra
+      - save_measurements
