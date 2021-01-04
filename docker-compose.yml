@@ -1,5 +1,6 @@
 version: "3"
 services:
+  
   zookeeper:
     image: zookeeper:latest
     restart: "on-failure:3"
@@ -7,6 +8,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: "2181"
     ports:
       - "2181:2181"
+
   kafka:
     image: wurstmeister/kafka:latest
     restart: "on-failure:3"
@@ -27,7 +29,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: /tmp/kafka-logs/broker1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-      KAFKA_CREATE_TOPICS: "test:1:1,weather:1:1"
+      KAFKA_CREATE_TOPICS: "test:1:1,weather:1:1,influxdb:1:1,clustering:1:1"
+
   data_ingestion:
     build:
       context: ./data_ingestion
@@ -40,6 +43,36 @@ services:
     volumes:
       - "./data_ingestion/data:/opt/app/mounted_data/:ro"
     command: tail -F /dev/null
+  clustering:
+    build: 
+      context: ./clustering
+      dockerfile: Dockerfile
+    depends_on: 
+      - kafka
+      - data_ingestion
+      - jobmanager
+    volumes:
+      - ./clustering/conf:/opt/flink/conf
+
+  jobmanager:
+    image: flink:1.12
+    command: "jobmanager.sh start-foreground"
+    volumes:
+      - ./clustering/conf:/opt/flink/conf
+    ports:
+      - 8081:8081
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+
+  taskmanager:
+    image: flink:1.12
+    volumes:
+      - ./clustering/conf:/opt/flink/conf
+    depends_on:
+      - jobmanager
+    command: "taskmanager.sh start-foreground"
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
   forecasting:
     build:
       context: ./forecasting
@@ -84,6 +117,21 @@ services:
       - kafka
       - cassandra
       - data_ingestion
+  influxdb:
+    build:
+      context: ./influxdb
+      dockerfile: Dockerfile
+    volumes:
+      - ./influxdb/resources/data:/var/lib/influxdb
+      - ./influxdb/resources/config/:/etc/influxdb/
+    ports:
+      - "8086:8086"
+      - "8082:8082"
+  kafka_influx_connector:
+    build:
+      context: ./kafka_influxdb_connector
+      dockerfile: Dockerfile
+
   batch_processing:
     build:
       context: ./batch_processing
