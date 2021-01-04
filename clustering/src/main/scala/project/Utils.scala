@@ -8,9 +8,9 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.Obje
 import net.liftweb.json.Serialization.write
 import moa.clusterers.denstream.{MicroCluster, Timestamp}
 
-class OutKafkaJsonSchema extends SerializationSchema[List[Measurement]] {
+class OutKafkaJsonSchema extends SerializationSchema[List[Out]] {
     
-    override def serialize(t: List[Measurement]): Array[Byte] = {
+    override def serialize(t: List[Out]): Array[Byte] = {
         implicit val formats: DefaultFormats.type = DefaultFormats
         write(t).getBytes()
     }
@@ -52,18 +52,20 @@ class ListAggregateFunction[T] extends AggregateFunction[T, List[T], List[T]] {
 
 class Measurement(var timestamp: Long = 0, var location_id: Long = 0, var measurement: Double = 0.0) {
     
-    var _timestamp: Long = timestamp;
-    var _location_id: Long = location_id;
-    var _measurement: Double = measurement;
+    var _timestamp: Long = timestamp
+    var _location_id: Long = location_id
+    var _measurement: Double = measurement
     
 }
 
-//class ClusteringFeature(center: Array[Double], dimensions: Int, creationTimestamp: Long, lambda: Double, currentTimestamp: Timestamp)
-//  extends MicroCluster(center, dimensions, creationTimestamp, lambda, currentTimestamp) {
-//
-//    // Add additional functionality if needed
-//
-//}
+class Out(var cluster_id : Long = 0, var timestamp: Long = 0, var location_id: Long = 0, var measurement: Double = 0.0) {
+    
+    var _cluster_id : Long = cluster_id
+    var _timestamp: Long = timestamp
+    var _location_id: Long = location_id
+    var _measurement: Double = measurement
+    
+}
 
 class ClusteringResult(
                         var location_id: Long = 0,
@@ -83,17 +85,17 @@ class ClusteringResult(
         cluster_info
           .getCenter
           .foreach { item =>
-            center += f"$item%1.5f, "
+              center += f"$item%1.5f, "
           }
         center = center.dropRight(2)
         center += ")"
-    
+        
         val id : Long = cluster_info.getId.toInt
         val size : Long = cluster_info.getN.toInt
         
         s"ID: $id\tCenter: $center\tSize: $size"
     }
     
-    override def toString: String = { s"${location_id}: ${cluster_label}, |M| = ${measurements.length}, features: ${features}" }
+    override def toString: String = { s"${location_id}: ${cluster_label}, |M| = ${measurements.length}" }
 }
 

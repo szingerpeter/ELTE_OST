@@ -21,5 +21,5 @@ echo "waiting for kafka service"
 ./wait-for-it.sh kafka:9093 --timeout=100 -- echo "kafka is up"
 
 echo "start streaming"
-spark-shell --packages "org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.1" -i src/main/scala/script.scala
+spark-shell --packages "org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.1 --conf spark.default.parallelism=1 --conf spark.executor.cores=1" -i src/main/scala/script.scala
 

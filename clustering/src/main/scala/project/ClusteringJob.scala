@@ -45,8 +45,8 @@ object ClusteringJob {
         kafkaConfig.setProperty("zookeeper.connect", "zookeeper:2181")
         
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
-        env.setParallelism(2) // TODO: set to 8
-        env.getConfig.setAutoWatermarkInterval(3600)
+        env.setParallelism(2)
+        env.getConfig.setAutoWatermarkInterval(6000)
         
         val measurements = env.addSource(
             new FlinkKafkaConsumer[ObjectNode]("test", new InKafkaJsonSchema(), kafkaConfig) // TODO
@@ -55,12 +55,12 @@ object ClusteringJob {
           .filter(_.get("measurement") != null)
           .filter(_.get("measurement").asInt != 0)
           .map { item =>
-            
-              val time = new Date(item.get("timestamp").asLong())
-              LOG.info(s"Time: ${time}")
+              
+              val time = new Date(1000*item.get("timestamp").asLong())
+              System.out.println(s"Time: ${time}")
               
               new Measurement(
-                  timestamp = item.get("timestamp").asLong(),
+                  timestamp = 1000*item.get("timestamp").asLong(),
                   location_id = item.get("location_id").asLong(),
                   measurement = item.get("measurement").asDouble()
               )
@@ -76,11 +76,11 @@ object ClusteringJob {
           })
           .name("Assign watermarks")
           .windowAll(TumblingEventTimeWindows.of(Time.hours(6)))
-          .allowedLateness(Time.days(1))
+          .allowedLateness(Time.days(3))
           .aggregate {
               new ListAggregateFunction[Measurement]
           }
-          .name("Grouped by Days")
+          .name("Grouped by 6 hours")
           .flatMap { (records : List[Measurement], collector : Collector[Map[Long, List[Measurement]]]) =>
               collector.collect(records.groupBy(_._location_id))
           }
@@ -90,37 +90,50 @@ object ClusteringJob {
               }
           }
           .name("Grouped by locations")
-    
+        
         val outStream = dataStream
           .keyBy(new JavaKeySelector[Map[Long, List[Measurement]], Long](value => 0))
           .process(new ProcessClustering)
           .name("Clustered measurements")
-
+        
         val clusteringStream = outStream
           .keyBy(new JavaKeySelector[List[ClusteringResult], Long](value => 0))
           .process(new EvaluateClustering)
           .name("Evaluated clustering")
-
+        
         val secondaryStream : DataStream[List[Measurement]] = dataStream
           .getSideOutput(new OutputTag[List[Measurement]]("Measurements"))
         
         
         clusteringStream
-          .flatMap { (result: (List[ClusteringResult], Double), collector: Collector[List[Measurement]]) =>
-              System.out.println(s"measurements: ${result._1}")
-              System.out.println(s"clustering coefficient: ${result._2}")
-              result._1.foreach(x => collector.collect(x.measurements))
+          .flatMap { (result: (List[ClusteringResult], Double), collector: Collector[List[Out]]) =>
+              System.out.println(s"Clustering coefficient: ${result._2}")
+              System.out.println(s"Result: ${result._1}")
+              result._1.foreach { x : ClusteringResult =>
+                
+                  val label = x.cluster_label
+                  collector.collect(
+                      x.measurements.map { measurement =>
+                          new Out(
+                              timestamp = measurement._timestamp,
+                              measurement = measurement._measurement,
+                              location_id = measurement._location_id,
+                              cluster_id = label
+                          )
+                      }
+                  )
+              }
           }
           .addSink(
-              new FlinkKafkaProducer[List[Measurement]](
-                  "influxdb",
+              new FlinkKafkaProducer[List[Out]](
+                  "clustering",
                   new OutKafkaJsonSchema,
                   kafkaConfig
               )
           )
           .name("InfluxDBSink")
-
-
+        
+        
         env.execute("Clustering")
     }
 }
