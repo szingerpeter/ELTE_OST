@@ -21,7 +21,7 @@ FROM openjdk:8-jre
 # Install dependencies
 RUN set -ex; \
   apt-get update; \
-  apt-get -y install libsnappy1v5 gettext-base libjemalloc-dev; \
+  apt-get -y install libsnappy1v5 gettext-base libjemalloc-dev dos2unix; \
   rm -rf /var/lib/apt/lists/*
 
 # Grab gosu for easy step-down from root
@@ -82,6 +82,10 @@ RUN set -ex; \
 
 # Configure container
 COPY docker-entrypoint.sh /
+
+RUN chmod +x /docker-entrypoint.sh
+RUN dos2unix /docker-entrypoint.sh
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 EXPOSE 6123 8081
 CMD ["help"]

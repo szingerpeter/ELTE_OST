@@ -29,7 +29,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_LOG_DIRS: /tmp/kafka-logs/broker1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
-      KAFKA_CREATE_TOPICS: "test:1:1,influxdb:1:1"
+      KAFKA_CREATE_TOPICS: "test:1:1,influxdb:1:1,clustering:1:1"
 
   data_ingestion:
     build:
