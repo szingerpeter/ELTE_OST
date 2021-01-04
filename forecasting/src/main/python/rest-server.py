@@ -9,6 +9,8 @@ import threading, time
 import os
 from datetime import datetime
 
+from cassandra.cluster import Cluster
+
 from model import ForecastingModel
 
 app = Flask(__name__)
@@ -20,6 +22,15 @@ cors = CORS(app, resources={r"/forecast": {"origins": "http://localhost:5000"}})
 methods = ('GET', 'POST')
 
 forecastingModel = ForecastingModel()
+
+cassandra_session = None
+while cassandra_session is None:
+    try:
+        # connect
+        cassandra_session = Cluster(['cassandra'], port=9042).connect()
+        time.sleep(5)
+    except:
+         pass
 
 targets = list(range(0,1916))
 
@@ -84,6 +95,19 @@ def query_metrics():
 
         target_dict = {}
         target_dict['target'] = t
+
+        data = []
+
+        rs = cassandra_session.execute('select timestamp, value from test.measurements where timestamp >= %d and timestamp <= %d and location_id = %d allow filtering;' % (from_unix, to_unix, int(t)))
+        for row in rs:
+            ts = row[0]
+            value = row[1]
+            data.append([value, int(ts*1000)])
+
+        target_dict['datapoints'] = data
+
+        pred_target_dict = {}
+        pred_target_dict['target'] = t
         
         data = []
 
@@ -92,9 +116,10 @@ def query_metrics():
             timestamp += interval
         data.append([float(forecastingModel.predict([float(to_unix), float(t)])[0][0]), int(to_unix*1000)])
         
-        target_dict['datapoints'] = data
+        pred_target_dict['datapoints'] = data
 
         return_list.append(target_dict)
+        return_list.append(pred_target_dict)
 
     return jsonify(return_list)
 

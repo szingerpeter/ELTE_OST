@@ -23,6 +23,8 @@ import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer, FlinkKafkaProducer}
 import org.apache.flink.streaming.util.serialization.{DeserializationSchema, SerializationSchema}
 import org.apache.flink.api.common.serialization.SimpleStringSchema
+import org.apache.flink.streaming.api.windowing.time.Time
+import java.util.concurrent.TimeUnit
 
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode
 
@@ -34,6 +36,8 @@ object Forecasting {
   val KAFKA_TOPIC_NAME = "test"
   val ZOOKEEPER_CONNECTION = "zookeeper:2181"
   val KAFKA_BOOTSTRAP_SERVER = "kafka:9093"
+
+  val window = Time.of(60, TimeUnit.SECONDS)
 
   def main(args: Array[String]) {
     // set up the execution environment
@@ -59,6 +63,8 @@ object Forecasting {
     
     // execute and print result
     lines.print()
+
+    val operations_minute = operationsPerMinute(lines, window)
 
     //lines.writeAsText("output.txt", org.apache.flink.core.fs.FileSystem.WriteMode.OVERWRITE).setParallelism(1);
 
@@ -86,5 +92,20 @@ object Forecasting {
       }
     }
     override def getProducedType: TypeInformation[ObjectNode] = TypeExtractor.getForClass(classOf[ObjectNode])
+  }
+
+  implicit def map2Properties(map: Map[String, String]): java.util.Properties = {
+    (new java.util.Properties /: map) { case (props, (k, v)) => props.put(k, v); props }
+  }
+
+  def operationsPerMinute(lines: DataStream[ObjectNode], window: Time): DataStream[String] = {
+    lines
+      .map(json => (json, 1))
+      .keyBy(jsonStr => {
+        jsonStr._1.get("location_id")
+        })
+      .timeWindow(window)
+      .sum(1)
+      .map(x => x.toString)
   }
 }

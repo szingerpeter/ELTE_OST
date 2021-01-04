@@ -43,6 +43,9 @@ RUN wget -q https://downloads.apache.org/kafka/2.6.0/kafka_2.13-2.6.0.tgz -O /tm
 ENV KAFKA_HOME="/usr/local/kafka"
 ENV PATH="${KAFKA_HOME}/bin:${PATH}"
 
+RUN apt-get update \
+    && apt-get install -y unzip vim curl wget dos2unix
+
 RUN mkdir -p /opt/app 
 WORKDIR /opt/app
 
@@ -52,6 +55,9 @@ RUN pip3 install -r requirements.txt
 
 COPY . .
 
-RUN chmod +x docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh \
+    && chmod +x wait-for-it.sh\
+    && dos2unix wait-for-it.sh\
+    && dos2unix docker-entrypoint.sh
 
-CMD ["bash", "docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
