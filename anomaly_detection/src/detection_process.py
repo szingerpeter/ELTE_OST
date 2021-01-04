@@ -16,44 +16,24 @@ import pandas as pd
 
 
 batch_size = 20
-bootstrap_servers_config = ['kafka:9093']
+bootstrap_servers_config = ['Kafka:9093']
 incoming_topic = "test"
 outgoing_topic = "anomaly"
 
 
 def send_spark_df_to_kafka(df, producer, outgoing_topic):
     """
-    input: spark-df, instance of KafkaProducer
-    Writes spark df to kafka topic.
-    
-    There is a spark internal function for that, but I struggled making that 
-    work, so this is a solution using the KafkaProducer from kafka-python
-
+    More efficient would be to use the the connection to a Kafka topic described in 
+    https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html
+    (Did not work, this is a workaround using python-kafka)
     """
     records = df.collect()
     for record in records:
-        message = dict( timestamp=record["timestamp"],
-                    location_id=record["location_id"],
-                    measurement=record["measurement"],
-                    anomaly=record["outlier"])
+        message = record.asDict()
         res = producer.send(outgoing_topic, value=message)
-    return res 
+    return res
 
-def process_pyspark_batch_df(spark_batch_df):
-    """
-    Adds time-features and detected anomalies to the dataframe
 
-    """    
-    #Remove this later 
-    spark_batch_df = spark_batch_df.withColumn("measurements", F.col("measurement"))
-    spark_batch_df = spark_batch_df.withColumn("timestamp", F.col("timestamp").cast("long"))
-    #The parameters are fitted on the batch atm todo: load parameters 
-    day_param, hour_param, std_param = create_simple_model(spark_batch_df)
-    #flag anomalies for batch 
-    fitted_df = apply_simple_model(spark_batch_df, day_param, hour_param, std_param)
-    return fitted_df
-        
- 
     
 if __name__ == "__main__":
     #Initialize spark session and KafkaConsumer&Producer
@@ -73,12 +53,19 @@ if __name__ == "__main__":
     producer = KafkaProducer(bootstrap_servers = bootstrap_servers_config,
           api_version=(0,11,5),
           value_serializer=lambda x: dumps(x).encode('utf-8'))
-       
+    
     counter = 0 
+    
+    #Load_parameters for model
+    day_avg_param_df = spark.read.option("header",True).csv("src/resources/day_of_week_estimates.csv")
+    hour_avg_df_param_df = spark.read.option("header",True).csv("src/resources/hour_of_day_estimates.csv")
+    std_param = 150
+    
   
     for message in consumer:   
         #cast message as pd dataframe
         message = message.value
+        print(message)
         df = pd.DataFrame(data = message, index = [counter])
         #collect batch-messages temporarily in pandas df
         if counter == 0:
@@ -90,8 +77,11 @@ if __name__ == "__main__":
         if counter%batch_size == 0:
             #transform pandas df to spark df
             spark_batch_df = spark.createDataFrame(batch_df)
-            #process batch
-            fitted_df = process_pyspark_batch_df(spark_batch_df)
+            #process batch...
+            spark_batch_df = spark_batch_df.withColumn("measurements", F.col("measurement"))
+            spark_batch_df = spark_batch_df.withColumn("timestamp", F.col("timestamp").cast("long"))
+            #Fit estimation model to batch_df
+            fitted_df = apply_simple_model(spark_batch_df, day_avg_param_df, hour_avg_df_param_df, std_param)
             #Send to Kafka topic 
             res = send_spark_df_to_kafka(fitted_df, producer, outgoing_topic)
             print("batch sent")
