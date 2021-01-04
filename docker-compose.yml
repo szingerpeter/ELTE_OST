@@ -111,4 +111,27 @@ services:
       - kafka
       - cassandra
       - data_ingestion
+  influxdb:
+    build:
+      context: ./influxdb
+      dockerfile: Dockerfile
+    volumes:
+      - ./influxdb/resources/data:/var/lib/influxdb
+      - ./influxdb/resources/config/:/etc/influxdb/
+    ports:
+      - "8086:8086"
+      - "8082:8082"
+  kafka_influx_connector:
+    build:
+      context: ./kafka_influxdb_connector
+      dockerfile: Dockerfile
 
+  batch_processing:
+    build:
+      context: ./batch_processing
+      dockerfile: Dockerfile
+    restart: "on-failure:3"
+    depends_on:
+      - kafka
+      - cassandra
+      - save_measurements
