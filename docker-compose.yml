@@ -111,19 +111,6 @@ services:
       - kafka
       - cassandra
       - data_ingestion
-<<<<<<< HEAD
-  anomaly_detection:
-    build:
-      context: ./anomaly_detection
-      dockerfile: Dockerfile
-    ports:
-      - "6000:6000"
-#      - 3003:3003
-    expose:
-#      - "5000"
-      - "6001"
-    command: tail -F /dev/null
-=======
   influxdb:
     build:
       context: ./influxdb
@@ -138,7 +125,6 @@ services:
     build:
       context: ./kafka_influxdb_connector
       dockerfile: Dockerfile
->>>>>>> master
 
   batch_processing:
     build:
@@ -149,3 +135,15 @@ services:
       - kafka
       - cassandra
       - save_measurements
+
+  anomaly_detection:
+    build:
+      context: ./anomaly_detection
+      dockerfile: Dockerfile
+    ports:
+      - "6000:6000"
+#      - 3003:3003
+    expose:
+#      - "5000"
+      - "6001"
+    command: tail -F /dev/null
