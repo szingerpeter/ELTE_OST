@@ -51,6 +51,11 @@ services:
       - "5000"
       - "3003"
     command: tail -F /dev/null
+  weather:
+    build:
+      context: ./weather
+      dockerfile: Dockerfile
+    command: tail -F /dev/null
   grafana:
     image: bitnami/grafana:latest
     container_name: grafana
