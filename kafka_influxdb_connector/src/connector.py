@@ -5,7 +5,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 class Connector:
 
-    def __init__(self, kafka_topic = 'influxdb'):
+    def __init__(self, kafka_topic = 'influxdb', bucket='ost_sm'):
 
         self._kafka_consumer = KafkaConsumer(
             'kafka_topic',
@@ -18,7 +18,7 @@ class Connector:
             url='127.0.0.1:8086',
             token='eit',
             org='elte',
-            bucket='ost_sm'
+            bucket=bucket
         )
 
         self._influxdb_client = InfluxDBClient(
@@ -57,8 +57,8 @@ class Connector:
 
 class AnnomalyConnector(Connector):
 
-    def __init__(self, kafka_topic='anomaly_influxdb'):
-        super(AnnomalyConnector, self).__init__(kafka_topic=kafka_topic)
+    def __init__(self, kafka_topic='anomaly_influxdb', bucket='ost_sm_annomaly'):
+        super(AnnomalyConnector, self).__init__(kafka_topic=kafka_topic, bucket=bucket)
 
     def _process(self, payload):
         self.write_db(
@@ -75,19 +75,16 @@ class AnnomalyConnector(Connector):
 
 class ClusteringConnector(Connector):
 
-    def __init__(self, kafka_topic='influxdb'):
-        super(ClusteringConnector, self).__init__(kafka_topic=kafka_topic)
+    def __init__(self, kafka_topic='influxdb', bucket='ost_sm'):
+        super(ClusteringConnector, self).__init__(kafka_topic=kafka_topic, bucket=bucket)
 
     def _process(self, payload):
         for measurement in payload:
-            timestamp = measurement['timestamp']
-            location_id = measurement['location_id']
-            value = measurement['measurement']
-
             self.write_db(
                 Point('Clustering') \
                     .tag('location-id', measurement['location_id']) \
                     .tag('cluster_id', measurement['cluster_id']) \
                     .field('measurement', measurement['measurement']) \
+                    .field('cluster_id', measurement['cluster_id']) \
                     .time(measurement['timestamp'])
             )

@@ -11,12 +11,16 @@ while true; do
     sleep 1
 done
 
-echo "Cleaning bucket from previous initialization..."
-influx bucket delete -n ost_sm -o elte --token eit
-influx bucket create -n ost_sm -o elte --token eit
+echo "Cleaning buckets from previous initialization..."
+influx bucket delete -n clustering -o elte --token eit
+influx bucket create -n clustering -o elte --token eit
+
+influx bucket delete -n annomaly -o elte --token eit
+influx bucket create -n annomaly -o elte --token eit
+
 echo "Creating user profile..."
 yes | influx setup \
-    --bucket ost_sm \
+    --bucket clustering \
     --token eit \
     --org elte \
     --password adminadmin \
@@ -25,6 +29,3 @@ yes | influx setup \
 
 echo "Staying awake..."
 sleep infinity
-
-python3 annomaly_connector.py &
-python3 clustering_connector.py &
